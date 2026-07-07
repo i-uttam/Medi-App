@@ -1,0 +1,1466 @@
+You are a senior Supabase Security Engineer, PostgreSQL Security Architect, Backend Authorization Engineer, and E-commerce Systems Security Specialist.
+
+Continue the existing pharmacy application project.
+
+STEP 1 created the product documentation.
+
+STEP 2 created the production-oriented Supabase PostgreSQL database architecture, migrations, database documentation, and RLS security plan.
+
+Your task is STEP 3:
+
+IMPLEMENT COMPLETE SUPABASE ROW LEVEL SECURITY, ADMIN RBAC, SECURE AUTHORIZATION HELPERS, AND SECURITY-CRITICAL DATABASE FUNCTIONS.
+
+IMPORTANT:
+
+Before changing any database or security code, completely read:
+
+* docs/PRD.md
+* docs/FEATURE_BEHAVIOUR.md
+* docs/USER_FLOWS.md
+* docs/ADMIN_FLOWS.md
+* docs/EDGE_CASES.md
+* docs/DATABASE_ARCHITECTURE.md
+* docs/RLS_SECURITY_PLAN.md
+* docs/DATABASE_TYPES_GENERATION.md if it exists
+* every SQL migration created in STEP 2
+* supabase/tests/database_verification.sql
+
+Inspect the entire existing Supabase migration structure.
+
+Do not assume table or enum names.
+
+Use the actual schema created in STEP 2.
+
+If this prompt references a conceptual table or column whose actual name differs, adapt the implementation to the real schema.
+
+Do not create duplicate tables.
+
+Do not recreate existing enums.
+
+Do not create conflicting policies.
+
+Do not silently replace the approved architecture.
+
+CURRENT PRODUCT EXCLUSIONS:
+
+* No prescription upload.
+* No prescription verification.
+* No prescription management.
+* No Billing/POS.
+* No manual billing system.
+* No online payment gateway implementation.
+
+GLOBAL SECURITY PRINCIPLES:
+
+1. Deny by default.
+2. Enable RLS on every client-accessible public schema table.
+3. Customer data access must always be ownership-based.
+4. Customer A must never access Customer B's private data.
+5. Admin authorization must be permission-based.
+6. Frontend route protection is not authorization.
+7. Never trust client-provided user_id for ownership.
+8. Never trust client-provided admin role names.
+9. Never trust auth user metadata for admin privileges.
+10. Never trust client-calculated order totals.
+11. Never expose the Supabase service role key to the mobile application.
+12. Never expose the Supabase service role key to the browser admin bundle.
+13. SECURITY DEFINER functions must use a safe fixed search_path.
+14. SECURITY DEFINER functions must have explicit EXECUTE privileges.
+15. Revoke PUBLIC execution from sensitive functions.
+16. Prevent recursive RLS policy designs.
+17. Avoid RLS helper functions that query tables whose RLS policies recursively call the same helper.
+18. Sensitive writes must use secure RPC/database functions or trusted server-side code.
+19. Historical business records must not be customer-editable.
+20. Security rules must be enforced by PostgreSQL/Supabase, not only by UI logic.
+
+TASK 1 — SECURITY AUDIT BEFORE IMPLEMENTATION
+
+Inspect all STEP 2 tables and create:
+
+docs/SECURITY_ARCHITECTURE.md
+
+Document the actual security classification of every table.
+
+For each table classify it as one of:
+
+PUBLIC_READ
+
+AUTHENTICATED_READ
+
+USER_OWNED
+
+ADMIN_READ
+
+ADMIN_WRITE
+
+SERVER_ONLY
+
+APPEND_ONLY
+
+For every table document:
+
+* Table name
+* Data sensitivity
+* RLS requirement
+* Customer SELECT
+* Customer INSERT
+* Customer UPDATE
+* Customer DELETE
+* Admin SELECT
+* Admin INSERT
+* Admin UPDATE
+* Admin DELETE
+* Secure RPC requirement
+* Audit requirement
+
+Do this using the actual database schema.
+
+TASK 2 — CREATE SECURITY MIGRATION STRUCTURE
+
+Continue the existing ordered migration sequence.
+
+Create logical security migrations.
+
+Use the next available migration numbers.
+
+Suggested logical separation:
+
+014_security_helpers.sql
+015_enable_rls.sql
+016_customer_rls_policies.sql
+017_catalog_rls_policies.sql
+018_admin_rbac_policies.sql
+019_secure_profile_functions.sql
+020_secure_cart_functions.sql
+021_secure_address_functions.sql
+022_secure_inventory_functions.sql
+023_secure_order_status_functions.sql
+024_secure_admin_functions.sql
+025_security_privileges.sql
+
+These names are examples.
+
+Use the next correct migration numbers based on the existing project.
+
+Do not modify old applied migrations unless the project is definitely still in a disposable local-only state.
+
+Prefer additive migrations.
+
+TASK 3 — AUTHENTICATION SECURITY HELPERS
+
+Create safe helper functions.
+
+At minimum evaluate and implement:
+
+current_user_id()
+
+is_authenticated()
+
+is_admin()
+
+is_active_admin()
+
+has_admin_permission(permission_key text)
+
+is_super_admin()
+
+Use the actual admin tables from STEP 2.
+
+Requirements:
+
+current_user_id:
+
+* Return auth.uid().
+* Do not accept a user_id argument.
+
+is_authenticated:
+
+* Return whether auth.uid() is not null.
+
+is_admin:
+
+* Validate the authenticated auth.uid() against admin_users.
+* Do not use JWT user metadata as the source of truth.
+* Do not use email domain matching.
+* Do not use hardcoded email addresses.
+
+is_active_admin:
+
+* Confirm the admin account exists.
+* Confirm admin status is active.
+* Use the actual admin status enum/schema.
+
+has_admin_permission:
+
+* Accept a permission key.
+* Resolve authenticated auth.uid().
+* Resolve active admin user.
+* Resolve admin roles.
+* Resolve role permissions.
+* Return true only when the permission exists.
+* Do not trust permission keys supplied from the frontend as authorization by themselves.
+* The function evaluates the requested permission against the authenticated database identity.
+
+is_super_admin:
+
+* Use the approved role architecture.
+* Do not use auth metadata.
+* Do not create a hidden hardcoded super admin email.
+
+SECURITY FUNCTION RULES:
+
+* Use stable SQL or PL/pgSQL only where appropriate.
+* Use SECURITY DEFINER only when required.
+* Set search_path explicitly.
+* Schema-qualify sensitive tables.
+* Revoke EXECUTE from PUBLIC where necessary.
+* Grant only to authenticated or appropriate database roles.
+* Prevent RLS recursion.
+
+Document every helper in docs/SECURITY_ARCHITECTURE.md.
+
+TASK 4 — ENABLE ROW LEVEL SECURITY
+
+Enable RLS on every applicable table in the public schema.
+
+At minimum inspect all actual tables corresponding to:
+
+profiles
+
+admin_users
+
+admin_roles
+
+admin_permissions
+
+admin_role_permissions
+
+admin_user_roles
+
+categories
+
+brands
+
+manufacturers
+
+products
+
+product_images
+
+product_compositions
+
+inventory
+
+inventory_transactions
+
+carts
+
+cart_items
+
+user_addresses
+
+coupons
+
+coupon_usage
+
+orders
+
+order address snapshots if present
+
+order_items
+
+order_status_history
+
+payments
+
+notifications
+
+user_notifications
+
+banners
+
+app_settings
+
+admin_activity_logs
+
+Do not assume this list is exhaustive.
+
+Inspect the actual schema.
+
+If a public schema table contains application data, explicitly decide its RLS posture.
+
+Do not leave an application table accidentally unrestricted.
+
+Create a verification query that identifies public tables without RLS enabled.
+
+TASK 5 — PROFILE RLS
+
+Implement secure profile access.
+
+Customer rules:
+
+SELECT:
+A customer may read only their own profile.
+
+UPDATE:
+A customer may update only their own allowed profile data.
+
+INSERT:
+Normal profile creation should follow the auth user profile trigger architecture from STEP 2.
+
+Do not allow a customer to create a profile for another auth user.
+
+DELETE:
+Do not allow direct profile deletion from the client.
+
+Account deletion must use a future secure account deletion workflow.
+
+IMPORTANT PROFILE FIELD PROTECTION:
+
+Customers must not be able to update privileged or server-controlled fields.
+
+At minimum protect:
+
+id
+
+status
+
+created_at
+
+admin-related state if any exists
+
+If normal UPDATE policies cannot safely restrict individual columns, use one of these secure approaches:
+
+* column-level UPDATE privileges
+* secure profile update RPC
+* revoke direct UPDATE and expose an RPC
+
+Choose the safest architecture.
+
+Preferred approach:
+
+Create update_my_profile(...) RPC.
+
+Allow updates only to approved fields such as:
+
+full_name
+
+avatar_url
+
+email if the architecture intentionally mirrors auth email
+
+phone if the architecture intentionally mirrors auth phone
+
+Be careful:
+
+If email or phone are authoritative in Supabase Auth, do not create inconsistent profile behaviour.
+
+Document the source of truth for email and phone.
+
+TASK 6 — CUSTOMER ACCOUNT STATUS ENFORCEMENT
+
+Blocked customers must not be able to perform protected commerce actions.
+
+Create a helper such as:
+
+is_active_customer()
+
+or
+
+assert_active_customer()
+
+Use the actual profile status architecture.
+
+Blocked customers may be allowed to:
+
+* authenticate
+* view a blocked account message
+* access limited support/account information
+
+Blocked customers must not be allowed to:
+
+* mutate cart
+* create addresses if policy forbids it
+* create orders
+* apply commerce mutations
+
+Document the exact blocked-user behaviour.
+
+Do not rely only on mobile UI checks.
+
+TASK 7 — PUBLIC CATALOG RLS
+
+Implement read access for customer-facing catalog data.
+
+Categories:
+
+Customers may read only active categories.
+
+Brands:
+
+Customers may read only active brands.
+
+Manufacturers:
+
+Customers may read only active manufacturers.
+
+Products:
+
+Customers may read products only when allowed by the product active/archive rules.
+
+Normal customer catalog queries must not expose archived products.
+
+Product images:
+
+Customers may read images only for customer-visible products.
+
+Product compositions:
+
+Customers may read compositions only for customer-visible products.
+
+Inventory:
+
+Do not expose unrestricted inventory mutation.
+
+Decide whether customers need direct SELECT access to exact inventory quantity.
+
+Preferred behaviour:
+
+Do not expose internal inventory transaction history.
+
+If exact stock quantity is not required by product behaviour, expose only availability through a safe view or RPC.
+
+Consider creating:
+
+product_availability
+
+or
+
+get_product_availability(product_id)
+
+The customer app should be able to determine:
+
+available
+
+out_of_stock
+
+maximum selectable quantity if business behaviour requires it
+
+Do not expose inventory_transactions to customers.
+
+Admin catalog writes must require exact permissions.
+
+TASK 8 — CART RLS AND SECURE CART MUTATIONS
+
+Implement strict cart ownership.
+
+Customers may access only their own cart.
+
+Never trust a client-provided user_id.
+
+The authenticated identity must come from auth.uid().
+
+Implement secure RPC functions for cart mutations.
+
+At minimum:
+
+get_or_create_my_cart()
+
+add_product_to_my_cart(product_id uuid)
+
+set_my_cart_item_quantity(cart_item_id uuid, quantity integer)
+
+increment_my_cart_item(cart_item_id uuid)
+
+decrement_my_cart_item(cart_item_id uuid)
+
+remove_my_cart_item(cart_item_id uuid)
+
+clear_my_cart()
+
+Names may adapt to the actual architecture.
+
+ADD PRODUCT RULES:
+
+* Require authenticated user.
+* Require active customer.
+* Product must exist.
+* Product must be active.
+* Product must not be archived.
+* Product must have inventory.
+* Available stock must be greater than zero.
+* Resolve or create the authenticated user's cart.
+* Never accept user_id.
+* If the product is not in the cart, insert quantity 1.
+* If the product already exists, define deterministic behaviour based on FEATURE_BEHAVIOUR.md.
+* Prevent quantity from exceeding available stock.
+* Prevent duplicate cart items.
+* Handle concurrent Add requests safely.
+
+SET QUANTITY RULES:
+
+* Customer must own the cart item.
+* Quantity must be greater than zero.
+* Product must still be active.
+* Quantity must not exceed available stock.
+* Do not trust cached client stock.
+
+INCREMENT RULES:
+
+* Lock or safely validate current cart item state.
+* Check current database stock.
+* Prevent quantity exceeding stock.
+
+DECREMENT RULES:
+
+Follow the approved feature behaviour.
+
+If quantity becomes zero:
+
+Either remove the cart item automatically
+
+OR reject zero and require remove.
+
+Use the existing specification consistently.
+
+REMOVE RULES:
+
+* Customer must own the cart item.
+* Remove only that cart item.
+
+CLEAR CART:
+
+* Clear only the authenticated user's cart.
+* Never accept another user's cart id without ownership validation.
+
+Direct client writes to carts/cart_items should be denied if RPCs are the mutation architecture.
+
+Customer SELECT may remain ownership-based for query loading.
+
+TASK 9 — ADDRESS RLS AND SECURE ADDRESS FUNCTIONS
+
+Customers may read only their own addresses.
+
+Implement secure address mutations.
+
+At minimum:
+
+create_my_address(...)
+
+update_my_address(address_id uuid, ...)
+
+delete_my_address(address_id uuid)
+
+set_my_default_address(address_id uuid)
+
+Requirements:
+
+* Never accept user_id.
+* Use auth.uid().
+* Require active customer where appropriate.
+* Validate ownership.
+* Normalize values where documented.
+* Respect required fields.
+* Prevent blank full_name.
+* Prevent blank phone.
+* Prevent blank address_line_1.
+* Prevent blank city.
+* Prevent blank state.
+* Prevent blank postal_code.
+* Validate country_code format based on the approved schema.
+* Enforce one default address per user.
+
+CREATE ADDRESS:
+
+If the user has no address, define whether the first address automatically becomes default.
+
+Follow FEATURE_BEHAVIOUR.md.
+
+If the specification is silent, make the first address default and document the decision.
+
+SET DEFAULT:
+
+Perform the default address change transactionally.
+
+Unset the previous default.
+
+Set the selected owned address as default.
+
+DELETE ADDRESS:
+
+Validate ownership.
+
+If the deleted address is the default address:
+
+Follow the approved feature behaviour.
+
+If specification is silent:
+
+Choose the most recently updated remaining address as the new default.
+
+If no address remains, no default address exists.
+
+Historical order address snapshots must remain unchanged.
+
+IMPORTANT UI BEHAVIOUR SUPPORT:
+
+The database must not assume tapping an address card means editing.
+
+Address editing occurs only through the explicit update address mutation.
+
+TASK 10 — COUPON READ SECURITY
+
+Customers may read only coupons that are appropriate for customer validation architecture.
+
+Do not expose sensitive internal coupon management fields unnecessarily if avoidable.
+
+Preferred architecture:
+
+Do not let the client decide coupon validity.
+
+Create a secure validation RPC such as:
+
+validate_my_coupon(coupon_code text)
+
+The function should return validation information needed by the cart/checkout UI.
+
+It must evaluate:
+
+* authenticated user
+* active customer
+* normalized coupon code
+* coupon exists
+* coupon is active
+* starts_at
+* expires_at
+* total usage limit
+* per-user usage limit
+
+Do not create coupon_usage in this function.
+
+Coupon usage is recorded only after successful order creation.
+
+IMPORTANT:
+
+Do not trust the subtotal supplied by the client.
+
+If coupon discount depends on cart subtotal, calculate the authoritative subtotal from the authenticated user's current cart and current product prices.
+
+TASK 11 — ORDER DATA RLS
+
+Customers may SELECT only their own orders.
+
+Customers may SELECT only order items belonging to their own orders.
+
+Customers may SELECT only order address snapshots belonging to their own orders.
+
+Customers may SELECT only order status history belonging to their own orders.
+
+Customers may SELECT payment records belonging to their own orders only when the product behaviour requires payment information.
+
+Customers must NOT directly:
+
+INSERT orders
+
+UPDATE orders
+
+DELETE orders
+
+INSERT order_items
+
+UPDATE order_items
+
+DELETE order_items
+
+INSERT order_status_history
+
+UPDATE order_status_history
+
+DELETE order_status_history
+
+INSERT payments
+
+UPDATE payment status
+
+DELETE payments
+
+Order creation will be implemented through a secure server-authoritative workflow in a later dedicated step.
+
+Do not implement a partial insecure Place Order function here unless the STEP 2 architecture already includes a fully specified transactional order function.
+
+Prepare security for the future secure order RPC/Edge Function.
+
+TASK 12 — CUSTOMER ORDER CANCELLATION SECURITY FOUNDATION
+
+Customers must not directly update orders.status.
+
+Create or prepare a secure function:
+
+cancel_my_order(order_id uuid, reason text)
+
+If implementing it now, it must be complete and transactional.
+
+Rules:
+
+* Require authenticated user.
+* Require active customer unless the approved specification allows blocked users to cancel an existing eligible order.
+* Validate order ownership.
+* Lock the order row.
+* Validate current status.
+* Only approved cancellable statuses may be cancelled.
+* Follow the official order status transition matrix.
+* Update order status to cancelled.
+* Set cancelled_at.
+* Create order status history.
+* Restore inventory exactly once.
+* Create inventory transaction records.
+* Prevent duplicate inventory restoration.
+* Preserve order items.
+* Preserve address snapshot.
+* Preserve coupon usage history according to approved business rules.
+* Add required audit/security logging where applicable.
+
+If exact cancellation inventory restoration cannot be implemented safely because order creation workflow is not yet complete:
+
+Do not create an insecure partial function.
+
+Document cancellation as blocked until the secure order engine step.
+
+TASK 13 — NOTIFICATION RLS
+
+Customers may read only their own user_notifications.
+
+Customers may read notification content only when a user_notification relationship exists for their auth user.
+
+Implement secure notification read functions:
+
+mark_my_notification_read(user_notification_id uuid)
+
+mark_all_my_notifications_read()
+
+Requirements:
+
+* Validate ownership.
+* Set is_read.
+* Set read_at.
+* Repeated calls must be safe.
+
+Customers must not create broadcast notifications.
+
+Customers must not assign notifications to other users.
+
+Admin notification sending remains permission-controlled.
+
+TASK 14 — BANNER AND APP SETTINGS READ SECURITY
+
+Customers may read only currently customer-visible banners.
+
+Customer-visible banner rules:
+
+is_active = true
+
+starts_at is null or starts_at <= now()
+
+ends_at is null or ends_at > now()
+
+Do not trust the client to hide expired banners.
+
+For app_settings:
+
+Do not expose every internal setting automatically.
+
+Create a safe customer configuration view or RPC.
+
+Example:
+
+get_public_app_config()
+
+Return only customer-safe settings such as:
+
+delivery_charge_paise
+
+free_delivery_threshold_paise
+
+minimum_order_value_paise
+
+support_phone
+
+support_email
+
+support_whatsapp
+
+maintenance_mode
+
+minimum_supported_app_version
+
+latest_app_version
+
+force_update
+
+Do not expose secret/internal configuration keys.
+
+TASK 15 — ADMIN RBAC POLICIES
+
+Implement permission-based admin access.
+
+Do not write one policy that gives every admin full access to every table.
+
+Use has_admin_permission(...).
+
+Implement exact permission mapping.
+
+Examples:
+
+Products SELECT:
+products.view
+
+Products INSERT:
+products.create
+
+Products UPDATE:
+products.update
+
+Product archive:
+products.archive
+
+Categories:
+categories.view
+categories.manage
+
+Brands:
+brands.view
+brands.manage
+
+Manufacturers:
+manufacturers.view
+manufacturers.manage
+
+Inventory SELECT:
+inventory.view
+
+Inventory mutation:
+Do not allow arbitrary direct UPDATE.
+Use secure inventory adjustment RPC requiring inventory.adjust.
+
+Orders SELECT:
+orders.view
+
+Order status changes:
+Use secure function requiring orders.update_status.
+
+Order cancellation:
+Use secure function requiring orders.cancel.
+
+Customers SELECT:
+customers.view
+
+Customer block/unblock:
+Use secure function requiring customers.block.
+
+Banners:
+banners.view
+banners.manage
+
+Coupons:
+coupons.view
+coupons.manage
+
+Notifications:
+notifications.view
+notifications.send
+
+Settings:
+settings.view
+settings.update
+
+Admin users:
+admins.view
+admins.manage
+
+Roles:
+roles.view
+roles.manage
+
+Audit logs:
+audit_logs.view
+
+Where a secure mutation function exists, deny direct table mutation even to normal admins unless direct mutation is intentionally required.
+
+TASK 16 — SECURE ADMIN INVENTORY ADJUSTMENT
+
+Create a secure RPC:
+
+admin_adjust_inventory(...)
+
+Adapt parameters to the actual schema.
+
+Required inputs conceptually:
+
+product_id
+
+adjustment type
+
+quantity or signed quantity change
+
+reason
+
+Required behaviour:
+
+* Require authenticated active admin.
+* Require inventory.adjust permission.
+* Reason is mandatory and trimmed.
+* Validate product exists.
+* Lock inventory row FOR UPDATE.
+* Determine quantity_before.
+* Calculate quantity_after.
+* Reject negative resulting stock.
+* Update inventory.
+* Insert inventory_transactions.
+* Connect admin_user_id.
+* Store the reason.
+* Create admin_activity_logs entry.
+* Store old and new values safely.
+* Return the updated inventory state.
+* Entire operation must be transactional.
+* Never trust quantity_before or quantity_after from the client.
+
+Supported manual adjustment behaviour must align with:
+
+admin_addition
+
+admin_reduction
+
+admin_correction
+
+Do not allow an admin to manually create order_placement inventory transaction types.
+
+Do not allow an admin to manually create order_cancellation_restore transaction types.
+
+TASK 17 — SECURE ADMIN CUSTOMER BLOCK/UNBLOCK
+
+Create secure RPC functions:
+
+admin_block_customer(user_id uuid, reason text)
+
+admin_unblock_customer(user_id uuid, reason text)
+
+Rules:
+
+* Require active admin.
+* Require customers.block permission.
+* Validate customer exists.
+* Do not treat admin identity as customer target without explicit architecture support.
+* Reason required.
+* Update profile status.
+* Create admin activity log.
+* Record old and new status.
+* Repeated block/unblock requests should have deterministic behaviour.
+* Do not silently overwrite without audit.
+
+Document whether blocked customers retain SELECT access to historical orders.
+
+Preferred behaviour:
+
+Blocked customers may view historical orders and account support information but cannot perform commerce mutations.
+
+TASK 18 — SECURE ADMIN ORDER STATUS FUNCTION
+
+Create a secure RPC:
+
+admin_update_order_status(order_id uuid, new_status order_status, reason text default null)
+
+Use actual enum type/schema.
+
+Rules:
+
+* Require active admin.
+* Require orders.update_status permission.
+* Lock order row FOR UPDATE.
+* Read current status.
+* Validate transition against the official transition matrix.
+* Reject invalid transitions.
+* Prevent status changes from delivered.
+* Prevent status changes from cancelled.
+* Do not use this generic function for cancellation if cancellation requires inventory restoration.
+* If new_status = cancelled, route to or require the dedicated cancellation workflow.
+* Update status.
+* Set delivered_at when transitioning to delivered.
+* Insert order_status_history.
+* Create admin_activity_logs.
+* Record old and new status.
+* Return updated order.
+* Entire operation transactional.
+
+The allowed transition matrix must match the approved PRD exactly.
+
+Do not create contradictory transitions.
+
+TASK 19 — ADMIN ORDER CANCELLATION FUNCTION
+
+Implement:
+
+admin_cancel_order(order_id uuid, reason text)
+
+Only if cancellation can be safely completed with the actual schema.
+
+Rules:
+
+* Require active admin.
+* Require orders.cancel permission.
+* Reason required.
+* Lock order.
+* Validate cancellable status.
+* Prevent cancelling delivered orders.
+* Prevent duplicate cancellation.
+* Restore inventory from immutable order item quantities.
+* Lock affected inventory rows safely.
+* Prevent double inventory restoration.
+* Create inventory transactions with order reference.
+* Update order status.
+* Set cancelled_at.
+* Insert status history.
+* Create admin activity log.
+* Preserve order records.
+* Preserve order items.
+* Preserve address snapshot.
+* Entire operation transactional.
+
+CONCURRENCY REQUIREMENT:
+
+Use deterministic product/inventory lock ordering where multiple order items exist to reduce deadlock risk.
+
+Document the chosen strategy.
+
+TASK 20 — ADMIN PRODUCT MUTATION SECURITY
+
+Evaluate whether direct admin INSERT/UPDATE is sufficiently safe.
+
+For product creation and editing:
+
+Database constraints from STEP 2 must remain authoritative.
+
+Product creation requires products.create.
+
+Product editing requires products.update.
+
+Product archive requires products.archive.
+
+Preferred architecture:
+
+Create secure archive function:
+
+admin_archive_product(product_id uuid, reason text)
+
+Rules:
+
+* Require products.archive.
+* Reason required.
+* Set archived_at.
+* Set is_active false.
+* Do not physically delete the product.
+* Create admin activity log.
+* Preserve historical order relationships.
+
+If product activation/deactivation is a normal product update, document that behaviour.
+
+TASK 21 — APP SETTINGS SECURITY
+
+Do not allow arbitrary client writes to app_settings.
+
+Create secure admin function:
+
+admin_update_app_setting(setting_key text, setting_value ...)
+
+Adapt to the actual app_settings schema.
+
+Rules:
+
+* Require settings.update.
+* Validate the setting key exists.
+* Validate the setting value according to the setting type.
+* Prevent unknown keys if architecture uses a fixed settings registry.
+* Never allow secret keys through this customer-facing configuration system.
+* Create admin activity log.
+* Store old and new values.
+* Return updated setting.
+
+At minimum validate:
+
+delivery_charge_paise >= 0
+
+free_delivery_threshold_paise >= 0
+
+minimum_order_value_paise >= 0
+
+maintenance_mode boolean
+
+force_update boolean
+
+version fields nonblank when required
+
+support email format at application/server level if database validation is intentionally limited
+
+TASK 22 — ADMIN ROLE AND PERMISSION SECURITY
+
+Normal customers must never create themselves as admins.
+
+Direct client inserts into:
+
+admin_users
+
+admin_user_roles
+
+admin_role_permissions
+
+must be denied.
+
+Create secure functions where appropriate for:
+
+create admin user record for an existing auth user
+
+activate/deactivate admin
+
+assign admin role
+
+remove admin role
+
+assign permission to role
+
+remove permission from role
+
+Rules:
+
+* Require admins.manage for admin management.
+* Require roles.manage for role/permission management.
+* Protect system roles.
+* Prevent privilege escalation.
+* Prevent an admin from granting permissions they are not authorized to manage if the approved architecture requires strict delegation.
+* Super Admin may have special management authority.
+* Never derive admin access from auth metadata.
+* Audit every role and permission change.
+
+BOOTSTRAP PROBLEM:
+
+Document how the first Super Admin is created.
+
+Do not create a hardcoded super admin email.
+
+Do not automatically promote the first registered customer.
+
+Preferred secure bootstrap options:
+
+* one-time SQL executed manually in Supabase SQL Editor by the project owner
+* protected server-side administrative bootstrap process
+
+Create:
+
+docs/SUPER_ADMIN_BOOTSTRAP.md
+
+Provide the safe manual bootstrap procedure using placeholders.
+
+Do not include real credentials.
+
+Do not include a service role key.
+
+TASK 23 — FUNCTION EXECUTION PRIVILEGES
+
+Audit every custom function.
+
+For every function decide:
+
+anon EXECUTE
+
+authenticated EXECUTE
+
+service_role usage
+
+admin usage through authenticated role
+
+Revoke PUBLIC EXECUTE from sensitive functions.
+
+Grant EXECUTE explicitly.
+
+Be careful:
+
+PostgreSQL functions may receive PUBLIC EXECUTE by default.
+
+Do not assume sensitive RPCs are private.
+
+Create:
+
+docs/FUNCTION_PRIVILEGES.md
+
+Document:
+
+function name
+
+security invoker/definer
+
+allowed database roles
+
+required application permission
+
+whether callable from mobile
+
+whether callable from admin browser
+
+whether server-only
+
+TASK 24 — STORAGE SECURITY PLAN
+
+Inspect whether STEP 2 or the existing project uses Supabase Storage.
+
+Create:
+
+docs/STORAGE_SECURITY_PLAN.md
+
+Define buckets for:
+
+product-images
+
+category-images
+
+brand-images
+
+banner-images
+
+avatars
+
+Do not implement prescription storage.
+
+For each bucket define:
+
+public or private
+
+customer read
+
+customer upload
+
+admin upload
+
+admin update
+
+admin delete
+
+path ownership strategy
+
+file type restrictions
+
+file size restrictions
+
+cache strategy
+
+Product/catalog images may be public if appropriate.
+
+Avatar architecture must use authenticated user-owned paths.
+
+Example concept:
+
+avatars/{auth.uid()}/...
+
+Customers must never overwrite another user's avatar.
+
+Admin image uploads must require appropriate admin permissions.
+
+If storage policies can be safely implemented now using the actual bucket architecture, create the storage policy migration.
+
+If buckets require manual creation or project-specific configuration, document the exact human action and do not create fake assumptions.
+
+TASK 25 — SECURITY VERIFICATION TESTS
+
+Create:
+
+supabase/tests/security_verification.sql
+
+Add safe verification tests or documented test blocks for:
+
+Unauthenticated profile access denied.
+
+Customer cannot read another profile.
+
+Customer cannot update status.
+
+Customer cannot read another address.
+
+Customer cannot update another address.
+
+Customer cannot read another cart.
+
+Customer cannot mutate another cart item.
+
+Customer cannot create an order directly.
+
+Customer cannot update order status directly.
+
+Customer cannot update payment status.
+
+Customer cannot update inventory.
+
+Customer cannot read inventory transactions.
+
+Customer cannot create admin user.
+
+Customer cannot assign admin role.
+
+Inactive admin fails permission checks.
+
+Admin without products.update cannot edit products.
+
+Admin without inventory.adjust cannot adjust inventory.
+
+Admin with inventory.adjust can call secure adjustment function.
+
+Inventory adjustment cannot produce negative stock.
+
+Inventory adjustment creates transaction history.
+
+Inventory adjustment creates admin audit log.
+
+Invalid order status transition is rejected.
+
+Delivered order status cannot change.
+
+Cancelled order status cannot change.
+
+Customer cannot cancel a non-owned order.
+
+Customer cannot mark another user's notification as read.
+
+Customer cannot access private app settings.
+
+More than one default address remains prevented.
+
+Blocked customer cannot mutate cart.
+
+Blocked customer cannot create commerce mutations.
+
+Sensitive functions are not executable by PUBLIC.
+
+Do not insert permanent demo data.
+
+Use transactions and rollback where possible.
+
+If auth.uid() simulation requires Supabase-specific request JWT claims, document the test setup correctly.
+
+Do not pretend tests passed if they were not executed.
+
+TASK 26 — SECURITY AUDIT QUERIES
+
+Create:
+
+supabase/tests/security_audit.sql
+
+Include queries to inspect:
+
+Public schema tables without RLS.
+
+RLS-enabled tables without policies.
+
+Policies by table.
+
+SECURITY DEFINER functions.
+
+Functions with PUBLIC EXECUTE.
+
+Function search_path configuration.
+
+Table grants to anon.
+
+Table grants to authenticated.
+
+Sensitive tables with direct INSERT grants.
+
+Sensitive tables with direct UPDATE grants.
+
+Sensitive tables with direct DELETE grants.
+
+Admin permission keys.
+
+Role permission relationships.
+
+Do not modify data in this audit file.
+
+TASK 27 — UPDATE DATABASE DOCUMENTATION
+
+Update:
+
+docs/DATABASE_ARCHITECTURE.md
+
+and:
+
+docs/RLS_SECURITY_PLAN.md
+
+Mark implemented security decisions.
+
+Do not leave the security plan written as if RLS is still completely future work.
+
+Document:
+
+* final customer ownership model
+* final admin permission model
+* secure mutation strategy
+* blocked customer behaviour
+* public catalog access
+* cart RPC architecture
+* address RPC architecture
+* order direct-write restrictions
+* admin inventory adjustment
+* admin order status workflow
+* cancellation workflow
+* audit logging
+* function privilege strategy
+* storage security strategy
+
+TASK 28 — FINAL SECURITY REVIEW
+
+After implementation:
+
+1. Read every new security migration in execution order.
+2. Check PostgreSQL syntax.
+3. Check Supabase compatibility.
+4. Check policy names for duplicates.
+5. Check RLS recursion risks.
+6. Check SECURITY DEFINER search_path.
+7. Check function EXECUTE grants.
+8. Check PUBLIC function privileges.
+9. Check anon table grants.
+10. Check authenticated table grants.
+11. Check ownership policies.
+12. Check admin permission enforcement.
+13. Check blocked customer enforcement.
+14. Check cart mutation ownership.
+15. Check address mutation ownership.
+16. Check inventory mutation security.
+17. Check order direct-write denial.
+18. Check order status transition validation.
+19. Check cancellation inventory restoration.
+20. Check admin audit logging.
+21. Check role assignment privilege escalation risks.
+22. Confirm auth metadata cannot create admin access.
+23. Confirm no hardcoded admin email exists.
+24. Confirm service role key is not in client code.
+25. Confirm no prescription tables, functions, policies, or storage buckets exist.
+26. Confirm no Billing/POS tables or functions exist.
+27. Confirm no mock users, medicines, orders, or security data were created.
+28. Run available SQL/static verification.
+29. If tests cannot run because Supabase is not linked, explicitly state that.
+30. List exact human actions required to apply and verify the migrations.
+31. Provide a concise summary.
+32. Stop and wait for the next instruction.
+
+DO NOT:
+
+* Build customer mobile UI.
+* Build admin UI.
+* Build login screens.
+* Implement online payment gateway.
+* Implement the final Place Order engine unless already safely required by the existing schema and specification.
+* Add prescription functionality.
+* Add Billing/POS.
+* Insert demo data.
+* Use mock authorization.
+* Use frontend-only authorization.
+* Hardcode admin email addresses.
+* Expose service role credentials.
+
+This step is security architecture, RLS, RBAC, secure RPC foundations, and authorization hardening only.
