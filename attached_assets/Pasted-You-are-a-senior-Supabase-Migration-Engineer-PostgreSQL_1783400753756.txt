@@ -1,0 +1,946 @@
+You are a senior Supabase Migration Engineer, PostgreSQL Security Engineer, and Replit Integration Engineer.
+
+Continue the existing pharmacy application project.
+
+IMPORTANT CURRENT STATE:
+
+STEP 2 has already created database architecture and database migration files.
+
+STEP 3 has already created RLS, RBAC, security helper, secure RPC, authorization, and security migration files.
+
+However, the real Supabase project was NOT linked when STEP 2 and STEP 3 were executed.
+
+Therefore:
+
+* Existing migration files may only exist locally.
+* Existing database migrations may not have been applied to the real Supabase database.
+* Existing RLS policies may not have been applied.
+* Existing security RPC functions may not have been applied.
+* Existing verification tests may not have been executed against the real database.
+* Existing documentation may incorrectly imply that migrations or security were successfully deployed.
+
+DO NOT DELETE STEP 2 OR STEP 3 WORK.
+
+DO NOT REGENERATE THE DATABASE ARCHITECTURE FROM SCRATCH.
+
+DO NOT REGENERATE THE SECURITY ARCHITECTURE FROM SCRATCH.
+
+DO NOT CREATE DUPLICATE MIGRATIONS.
+
+YOUR TASK:
+
+Safely connect this existing project to my real Supabase project, audit all existing local migrations, inspect the real remote database state, apply the existing migrations in the correct order, verify the real schema and security configuration, and generate real database types.
+
+PHASE 1 — INSPECT EXISTING PROJECT
+
+Before running any Supabase migration command, inspect the entire project.
+
+Read:
+
+* package.json
+* package-lock.json or equivalent lockfile
+* supabase/config.toml if it exists
+* every file inside supabase/migrations
+* supabase/tests/database_verification.sql
+* supabase/tests/security_verification.sql
+* supabase/tests/security_audit.sql
+* docs/PRD.md
+* docs/FEATURE_BEHAVIOUR.md
+* docs/DATABASE_ARCHITECTURE.md
+* docs/RLS_SECURITY_PLAN.md
+* docs/SECURITY_ARCHITECTURE.md
+* docs/FUNCTION_PRIVILEGES.md
+* docs/SUPER_ADMIN_BOOTSTRAP.md
+* docs/STORAGE_SECURITY_PLAN.md
+* docs/DATABASE_TYPES_GENERATION.md if it exists
+* all existing Supabase client configuration files
+* all environment variable configuration files
+* .gitignore
+
+Determine:
+
+1. Whether Supabase CLI is installed.
+2. Whether the project has been initialized with Supabase CLI.
+3. Whether supabase/config.toml exists.
+4. Whether the project is currently linked to a remote Supabase project.
+5. Whether a remote project reference is configured.
+6. The exact number of local migration files.
+7. The exact migration filenames in execution order.
+8. Which migrations belong to STEP 2.
+9. Which migrations belong to STEP 3.
+10. Whether migration numbering or timestamps are valid.
+11. Whether duplicate migration versions exist.
+12. Whether duplicate SQL objects may be created.
+13. Whether security migrations depend on database objects created in earlier migrations.
+14. Whether any documentation falsely states that remote migrations were applied or verified.
+15. Whether any real credentials are accidentally stored in source code.
+
+Do not modify migrations yet.
+
+First understand the complete local migration chain.
+
+PHASE 2 — CREATE A MIGRATION AUDIT
+
+Create:
+
+docs/MIGRATION_DEPLOYMENT_AUDIT.md
+
+Document:
+
+* Local Supabase initialization state
+* Current remote linking state
+* Local migration count
+* Ordered migration list
+* STEP 2 migration range
+* STEP 3 migration range
+* Migration dependency chain
+* Potential migration conflicts
+* Potential circular dependencies
+* Duplicate object risks
+* Existing remote deployment claims
+* Actual verified deployment status
+
+Clearly state:
+
+LOCAL MIGRATIONS EXIST
+
+and separately state whether:
+
+REMOTE MIGRATIONS VERIFIED
+
+or:
+
+REMOTE MIGRATIONS NOT YET VERIFIED
+
+Do not claim remote deployment success without actual CLI/database verification.
+
+PHASE 3 — PREPARE SUPABASE CLI
+
+Use the official Supabase CLI.
+
+If Supabase CLI is not installed as a project development dependency, install:
+
+npm install supabase --save-dev
+
+Use:
+
+npx supabase
+
+for CLI commands.
+
+Do not install unofficial Supabase CLI packages.
+
+Verify the CLI can run.
+
+Check the Node.js version.
+
+The npm/npx Supabase CLI requires a supported Node.js version.
+
+If the current Replit Node.js version is incompatible, update the project runtime configuration safely before continuing.
+
+Do not break the existing project.
+
+If Supabase has not been initialized, run:
+
+npx supabase init
+
+Do not overwrite valid existing Supabase configuration.
+
+PHASE 4 — SECURE CREDENTIAL CONFIGURATION
+
+The project needs to connect to my existing real Supabase project.
+
+Do not create a new Supabase project.
+
+Do not invent a project reference.
+
+Do not select an unrelated project.
+
+Ask me only for information that is actually required.
+
+For non-interactive Replit CLI authentication, support these Replit Secrets:
+
+SUPABASE_ACCESS_TOKEN
+
+SUPABASE_DB_PASSWORD
+
+SUPABASE_PROJECT_ID
+
+SUPABASE_PROJECT_ID must contain the real Supabase project reference.
+
+If the project uses another established variable name for the project reference, document the difference and avoid unnecessary duplicate configuration.
+
+Never store the Supabase Personal Access Token in source code.
+
+Never store the database password in source code.
+
+Never store credentials in:
+
+* .env.example
+* README files
+* documentation
+* SQL migrations
+* config.toml
+* TypeScript files
+* JavaScript files
+* shell scripts with hardcoded values
+* Git tracked files
+
+Never print the complete access token.
+
+Never print the database password.
+
+Never expose either credential to the customer mobile application.
+
+Never expose either credential to the browser admin bundle.
+
+Do not request the service_role key for Supabase CLI linking.
+
+PHASE 5 — LINK THE REAL SUPABASE PROJECT
+
+After the required Replit Secrets are configured, authenticate the official Supabase CLI.
+
+Use the secure supported workflow.
+
+Link the local Supabase project to the exact project reference stored in the secure project configuration.
+
+Conceptually:
+
+npx supabase link --project-ref <REAL_PROJECT_REFERENCE>
+
+Do not hardcode a fake project reference.
+
+Do not claim the project is linked based only on a config file.
+
+Verify CLI communication with the remote Supabase project.
+
+Record only safe project identity information.
+
+Never display secret credentials.
+
+PHASE 6 — INSPECT REMOTE MIGRATION STATE BEFORE PUSH
+
+IMPORTANT:
+
+DO NOT RUN `supabase db push` IMMEDIATELY.
+
+First inspect the remote migration history.
+
+Run the appropriate official Supabase migration inspection commands.
+
+Use:
+
+npx supabase migration list
+
+or the appropriate current CLI command.
+
+Compare:
+
+LOCAL MIGRATION HISTORY
+
+with:
+
+REMOTE MIGRATION HISTORY
+
+Inspect whether the remote database already contains application schema objects.
+
+Determine:
+
+* Is the remote database a new project?
+* Are pharmacy application tables already present?
+* Are any STEP 2 migrations already recorded remotely?
+* Are any STEP 3 migrations already recorded remotely?
+* Does remote migration history diverge from local migration history?
+* Were tables manually created using Supabase SQL Editor?
+* Are there existing conflicting enums?
+* Are there existing conflicting functions?
+* Are there existing RLS policies?
+* Are there existing Storage policies?
+* Would db push attempt to recreate existing objects?
+
+Update:
+
+docs/MIGRATION_DEPLOYMENT_AUDIT.md
+
+with the actual remote state.
+
+PHASE 7 — HANDLE REMOTE STATE SAFELY
+
+CASE A — REMOTE PROJECT HAS NO CONFLICTING APPLICATION SCHEMA
+
+If the remote database does not contain conflicting pharmacy application schema:
+
+Proceed with the existing migration chain.
+
+Apply local migrations using the official migration workflow.
+
+Prefer:
+
+npx supabase db push
+
+Do not manually paste every migration into Supabase SQL Editor.
+
+CASE B — REMOTE DATABASE ALREADY CONTAINS APPLICATION TABLES
+
+If the remote database already contains pharmacy application tables:
+
+STOP before pushing migrations.
+
+Inspect the schema.
+
+Compare remote objects against local migrations.
+
+Do not:
+
+* drop tables
+* reset the database
+* delete remote migration history
+* mark migrations as applied without verification
+* destroy user data
+
+If remote schema changes were made manually, use the appropriate Supabase migration reconciliation workflow.
+
+Evaluate:
+
+npx supabase db pull
+
+and:
+
+npx supabase migration list
+
+Do not use `migration repair` blindly.
+
+Only use migration repair when the migration history mismatch is fully understood and documented.
+
+If destructive action would be required, stop and ask for my explicit approval.
+
+CASE C — REMOTE MIGRATION HISTORY IS PARTIALLY APPLIED
+
+If some migrations are recorded and others are not:
+
+Determine the exact last successfully applied migration.
+
+Inspect actual database objects.
+
+Verify that migration history matches real schema state.
+
+Apply only pending migrations through the official migration system.
+
+Do not rerun applied migrations manually.
+
+PHASE 8 — PRE-PUSH MIGRATION STATIC AUDIT
+
+Before applying the migration chain, perform a complete static SQL audit.
+
+Read every migration in exact execution order.
+
+Check:
+
+* PostgreSQL syntax
+* Supabase compatibility
+* enum creation order
+* table creation order
+* foreign key dependencies
+* circular foreign key handling
+* function dependency order
+* trigger dependency order
+* RLS policy dependency order
+* helper function dependency order
+* admin permission dependency order
+* SECURITY DEFINER functions
+* fixed search_path configuration
+* duplicate policy names
+* duplicate trigger names
+* duplicate function signatures
+* duplicate indexes
+* partial unique indexes
+* references to nonexistent columns
+* references to nonexistent enum values
+* references to migrations that execute later
+* GRANT statements
+* REVOKE statements
+* PUBLIC EXECUTE privileges
+* auth schema references
+* storage schema references
+
+Pay special attention to STEP 3 security migrations because they were generated without executing against the real database.
+
+Do not assume generated SQL is valid.
+
+If a migration contains an error:
+
+Fix the migration only if it has never been applied remotely.
+
+Document the fix in:
+
+docs/MIGRATION_DEPLOYMENT_AUDIT.md
+
+Record:
+
+* migration filename
+* problem
+* correction
+* reason
+
+Do not silently change applied migrations.
+
+PHASE 9 — APPLY EXISTING STEP 2 AND STEP 3 MIGRATIONS
+
+If the remote state is safe and the migration audit passes:
+
+Apply the migration chain using:
+
+npx supabase db push
+
+The expected order is:
+
+STEP 2 database architecture migrations
+
+then
+
+STEP 3 RLS, RBAC, security helper, secure RPC, privilege, and storage security migrations
+
+Do not skip STEP 2 and push STEP 3 security migrations first.
+
+Do not manually reorder migrations unless migration ordering is invalid.
+
+If db push fails:
+
+1. Capture the exact migration filename.
+2. Capture the PostgreSQL error without exposing secrets.
+3. Identify the actual root cause.
+4. Inspect dependent migrations.
+5. Fix only unapplied local migration code.
+6. Re-run the static audit.
+7. Retry db push.
+
+Do not mark a failed migration as successful.
+
+Do not use migration repair to hide SQL errors.
+
+Do not delete the migration history table.
+
+Do not reset the remote database.
+
+PHASE 10 — VERIFY REAL REMOTE DATABASE SCHEMA
+
+After successful migration deployment, verify the actual remote database.
+
+Verify expected tables using the real schema.
+
+At minimum inspect:
+
+profiles
+
+admin_users
+
+admin_roles
+
+admin_permissions
+
+admin_role_permissions
+
+admin_user_roles
+
+categories
+
+brands
+
+manufacturers
+
+products
+
+product_images
+
+product_compositions
+
+inventory
+
+inventory_transactions
+
+carts
+
+cart_items
+
+user_addresses
+
+coupons
+
+coupon_usage
+
+orders
+
+order_items
+
+order_status_history
+
+payments
+
+notifications
+
+user_notifications
+
+banners
+
+app_settings
+
+admin_activity_logs
+
+Also verify any actual additional approved tables such as:
+
+order address snapshot tables
+
+notification relationship tables
+
+or other tables created by STEP 2.
+
+Do not create missing objects manually.
+
+If an expected object is missing:
+
+Find the responsible migration.
+
+Determine why it was not created.
+
+Fix the migration workflow correctly.
+
+PHASE 11 — VERIFY RLS ON THE REAL DATABASE
+
+Run the existing security audit SQL against the actual linked Supabase database where safe.
+
+Verify:
+
+* all application public tables have intentional RLS posture
+* user-owned tables have RLS enabled
+* profiles ownership policy exists
+* address ownership policies exist
+* cart ownership policies exist
+* order ownership policies exist
+* order item ownership access exists
+* notification ownership access exists
+* catalog read policies are correct
+* inventory direct mutation is denied
+* inventory transaction customer access is denied
+* admin tables are protected
+* admin role assignment is protected
+* app settings private values are protected
+* customer direct order INSERT is denied
+* customer direct order UPDATE is denied
+* customer direct payment status mutation is denied
+
+Do not rely only on migration files.
+
+Inspect the actual pg_policies and PostgreSQL catalog state.
+
+PHASE 12 — VERIFY SECURITY FUNCTIONS
+
+Inspect actual deployed functions.
+
+Verify functions created by STEP 3.
+
+At minimum inspect actual equivalents of:
+
+current_user_id
+
+is_authenticated
+
+is_admin
+
+is_active_admin
+
+has_admin_permission
+
+is_super_admin
+
+is_active_customer
+
+profile update RPC
+
+cart RPC functions
+
+address RPC functions
+
+coupon validation RPC
+
+notification read RPC functions
+
+admin inventory adjustment RPC
+
+admin customer block RPC
+
+admin customer unblock RPC
+
+admin order status RPC
+
+admin order cancellation RPC if implemented
+
+admin product archive RPC
+
+admin app settings update RPC
+
+admin role management functions
+
+Use actual function names from the migration files.
+
+For every SECURITY DEFINER function verify:
+
+* function owner
+* security definer state
+* search_path
+* EXECUTE privileges
+* PUBLIC EXECUTE state
+
+Sensitive functions must not retain unintended PUBLIC EXECUTE.
+
+Do not assume REVOKE statements worked.
+
+Verify actual PostgreSQL privileges.
+
+PHASE 13 — RUN DATABASE VERIFICATION
+
+Run:
+
+supabase/tests/database_verification.sql
+
+against an appropriate safe environment or using its transaction/rollback design.
+
+Do not insert permanent demo data.
+
+Verify database constraints.
+
+At minimum verify:
+
+* selling price cannot exceed MRP
+* negative stock rejected
+* invalid cart quantity rejected
+* duplicate cart product rejected
+* multiple default addresses rejected
+* duplicate order idempotency key rejected
+* invalid coupon date range rejected
+* duplicate coupon usage rejected
+* multiple primary product images rejected
+* order snapshots remain historically stable
+
+If a test cannot run because it requires authenticated fixture context:
+
+Do not fake a pass.
+
+Document the limitation.
+
+PHASE 14 — RUN SECURITY VERIFICATION
+
+Run:
+
+supabase/tests/security_verification.sql
+
+where technically safe.
+
+If auth.uid() simulation is required, use the documented Supabase/PostgreSQL test approach.
+
+Do not create permanent fake users.
+
+Use transactions and rollback where possible.
+
+Verify:
+
+* unauthenticated private access denied
+* cross-user profile access denied
+* cross-user address access denied
+* cross-user cart access denied
+* direct order creation denied
+* direct order status mutation denied
+* direct payment status mutation denied
+* direct inventory mutation denied
+* customer admin creation denied
+* customer role assignment denied
+* blocked customer commerce mutations denied
+* admin permission checks work
+* invalid order transitions rejected
+* sensitive functions are not executable by PUBLIC
+
+Clearly separate:
+
+TEST PASSED
+
+TEST FAILED
+
+TEST NOT EXECUTED
+
+Do not describe an unexecuted test as passed.
+
+PHASE 15 — VERIFY ADMIN PERMISSION ARCHITECTURE
+
+Inspect actual admin permission records or permission architecture.
+
+Do not create fake admin users.
+
+Verify required permission keys exist or are structurally provisioned according to the migration architecture.
+
+Check support for:
+
+dashboard.view
+
+products.view
+
+products.create
+
+products.update
+
+products.archive
+
+categories.view
+
+categories.manage
+
+brands.view
+
+brands.manage
+
+manufacturers.view
+
+manufacturers.manage
+
+inventory.view
+
+inventory.adjust
+
+orders.view
+
+orders.update_status
+
+orders.cancel
+
+customers.view
+
+customers.block
+
+banners.view
+
+banners.manage
+
+coupons.view
+
+coupons.manage
+
+notifications.view
+
+notifications.send
+
+settings.view
+
+settings.update
+
+admins.view
+
+admins.manage
+
+roles.view
+
+roles.manage
+
+audit_logs.view
+
+Do not automatically promote any customer to admin.
+
+Do not create a hardcoded super admin email.
+
+Keep the manual Super Admin bootstrap workflow documented.
+
+PHASE 16 — VERIFY STORAGE SECURITY
+
+Inspect actual Supabase Storage policy state if STEP 3 created storage policies.
+
+Expected conceptual buckets:
+
+product-images
+
+category-images
+
+brand-images
+
+banner-images
+
+avatars
+
+There must be no prescription bucket.
+
+Verify:
+
+* catalog image access
+* admin upload protection
+* avatar user-owned path strategy
+* cross-user avatar overwrite prevention
+
+If buckets do not exist because manual bucket creation is required:
+
+Do not claim storage is complete.
+
+Document the exact required human action.
+
+Do not create unrelated buckets.
+
+PHASE 17 — CONFIGURE APPLICATION PUBLIC SUPABASE VARIABLES
+
+Prepare the application for future customer and admin applications.
+
+Use the current Supabase public key architecture supported by the project.
+
+Prefer the current Supabase publishable key when available.
+
+For Expo customer application, prepare:
+
+EXPO_PUBLIC_SUPABASE_URL
+
+EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+
+For Next.js admin browser application, prepare:
+
+NEXT_PUBLIC_SUPABASE_URL
+
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+
+If the project intentionally uses the legacy anon key, document the reason.
+
+Do not expose:
+
+SUPABASE_ACCESS_TOKEN
+
+SUPABASE_DB_PASSWORD
+
+service_role key
+
+Supabase secret key
+
+through EXPO_PUBLIC variables.
+
+Do not expose them through NEXT_PUBLIC variables.
+
+Update:
+
+.env.example
+
+with variable names and empty placeholders only.
+
+Ensure real secret files are ignored by Git.
+
+PHASE 18 — GENERATE REAL TYPES
+
+After the real schema is successfully deployed, generate TypeScript types from the actual linked Supabase project.
+
+Use the official Supabase CLI type generation workflow.
+
+Use the actual project reference securely.
+
+Generate into the approved project location.
+
+Prefer:
+
+types/database.types.ts
+
+if that is the documented architecture.
+
+Do not manually invent database types.
+
+Do not keep placeholder fake types when real generation succeeds.
+
+Verify the generated types include actual tables, enums, views, and RPC functions.
+
+PHASE 19 — UPDATE DOCUMENTATION
+
+Update:
+
+docs/DATABASE_ARCHITECTURE.md
+
+docs/RLS_SECURITY_PLAN.md
+
+docs/SECURITY_ARCHITECTURE.md
+
+docs/FUNCTION_PRIVILEGES.md
+
+docs/MIGRATION_DEPLOYMENT_AUDIT.md
+
+Create:
+
+docs/SUPABASE_CONNECTION.md
+
+Document the actual verified state.
+
+Do not include secrets.
+
+Clearly document:
+
+* linked project state
+* migration deployment state
+* migration count
+* remote migration state
+* schema verification state
+* RLS verification state
+* function privilege verification state
+* database test state
+* security test state
+* storage state
+* generated type state
+* human actions still required
+
+PHASE 20 — FINAL STATUS REPORT
+
+At the end, provide a concise report with these exact sections:
+
+SUPABASE CONNECTION STATUS
+
+MIGRATION STATUS
+
+REMOTE DATABASE STATUS
+
+RLS STATUS
+
+RBAC STATUS
+
+SECURE RPC STATUS
+
+DATABASE TEST STATUS
+
+SECURITY TEST STATUS
+
+STORAGE STATUS
+
+DATABASE TYPES STATUS
+
+HUMAN ACTIONS REQUIRED
+
+FINAL RESULT
+
+FINAL RESULT must be exactly one of:
+
+SUPABASE LINKED — STEP 2 AND STEP 3 MIGRATIONS APPLIED AND VERIFIED
+
+SUPABASE LINKED — MIGRATIONS PARTIALLY APPLIED
+
+SUPABASE LINKED — MIGRATIONS NOT APPLIED
+
+SUPABASE NOT LINKED
+
+Do not use vague wording.
+
+IMPORTANT PROHIBITIONS:
+
+* Do not delete existing STEP 2 migrations.
+* Do not delete existing STEP 3 migrations.
+* Do not rebuild the schema from scratch.
+* Do not reset the remote database.
+* Do not drop remote tables.
+* Do not destroy existing data.
+* Do not insert demo medicines.
+* Do not insert demo customers.
+* Do not insert demo orders.
+* Do not create fake admins.
+* Do not create a hardcoded super admin.
+* Do not expose service role credentials.
+* Do not add prescription functionality.
+* Do not add prescription storage.
+* Do not add Billing/POS.
+* Do not build mobile UI.
+* Do not build admin UI.
+* Do not continue to the next development step automatically.
+
+Stop after linking, auditing, deploying, verifying, generating types, and updating documentation.

@@ -277,7 +277,7 @@ DECLARE
     v_setting       public.app_settings;
     v_old_value     JSONB;
 BEGIN
-    PERFORM public.assert_active_admin('settings.manage');
+    PERFORM public.assert_active_admin('settings.update');
 
     IF TRIM(COALESCE(p_key, '')) = '' THEN
         RAISE EXCEPTION 'validation_error'
