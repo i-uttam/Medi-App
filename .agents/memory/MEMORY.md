@@ -1,0 +1,1 @@
+- [Online Pharmacy RLS Security Layer](pharmacy-rls-security.md) — migrations 014–025 implement full Supabase RLS + RBAC; key design decisions and bug patterns recorded.
