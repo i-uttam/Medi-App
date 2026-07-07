@@ -171,6 +171,8 @@ These bugs were found during static audit and corrected **before any migration w
 | 3 | `024_secure_admin_functions.sql` | `admin_update_app_setting` used `'setting_updated'` as `admin_activity_action` value | Corrected to `'app_settings_updated'` | Enum `admin_activity_action` (migration 001) defines `'app_settings_updated'`, not `'setting_updated'` |
 | 4 | `024_secure_admin_functions.sql` | `admin_update_app_setting` called `assert_active_admin('settings.manage')` but the seeded permission key is `settings.update` | Corrected to `assert_active_admin('settings.update')` | Migration 002 seeds `settings.update` not `settings.manage`; wrong key would always deny non-super-admins |
 | 5 | `021_secure_address_functions.sql` | `create_my_address`: `EXISTS` check + conditional `is_default` is not atomic — two concurrent first-address creates for the same user could both decide `is_default = TRUE` | Added `PERFORM 1 FROM public.profiles WHERE id = auth.uid() FOR UPDATE` before the EXISTS check to serialize concurrent operations per user | Profile row lock prevents ABBA-style race without needing advisory locks |
+| 6 | `024_secure_admin_functions.sql` | `admin_update_app_setting`: `p_value` declared as `JSONB` but `app_settings.value` column is `TEXT`; local variable `v_old_value` also declared `JSONB`; INSERT would fail with implicit cast error in PostgreSQL | Changed parameter `p_value TEXT`, changed `v_old_value TEXT`; updated `COMMENT ON FUNCTION` and all `REVOKE/GRANT` signatures in 024 and 025 | PostgreSQL has no implicit/assignment cast from jsonb to text; the INSERT would throw "column value is of type text but expression is of type jsonb" |
+| 7 | `supabase/tests/security_audit.sql` | AUDIT 10 query references `au.full_name` and `au.email` on `admin_users`, but those columns do not exist on that table (only `id`, `user_id`, `status`, `created_at`, `updated_at`) | Changed to join `public.profiles p ON p.id = au.user_id` and select `p.full_name, p.email` instead; added `au.user_id` to GROUP BY | `admin_users` does not store profile data; user info lives in the `profiles` table (joined by `user_id`) |
 
 ### NO OTHER ISSUES FOUND
 
@@ -181,9 +183,10 @@ These bugs were found during static audit and corrected **before any migration w
 | Missing GRANT SELECT for tables with RLS policies | ✅ NONE (025 covers all 25 tables) |
 | Storage schema references | ✅ NONE (storage is not in migrations) |
 | Functions without REVOKE FROM PUBLIC | ✅ ALL REVOKED (verified in 014, 019–024) |
-| Nonexistent columns referenced | ✅ NONE |
+| Nonexistent columns referenced | ✅ NONE (fixed in security_audit.sql, see #7 above) |
 | Circular FK without deferred resolution | ✅ NONE |
 | `FOR UPDATE OF alias` syntax | ✅ VALID (PostgreSQL accepts table aliases in OF clause) |
+| Type mismatches in function params vs column types | ✅ FIXED (see #6 above) |
 
 ---
 
@@ -236,6 +239,8 @@ These bugs were found during static audit and corrected **before any migration w
 | 2026-07-07 | STEP 4 Phase 2 | This audit document created |
 | 2026-07-07 | STEP 4 Phase 3 | `supabase init` run; `config.toml` created |
 | 2026-07-07 | STEP 4 Phase 3 | Static SQL audit complete; 5 bugs found and fixed |
+| 2026-07-07 | STEP 4 Phase 3 (cont.) | 2 additional bugs found and fixed: JSONB/TEXT mismatch in 024 (bug #6); wrong column refs in security_audit.sql (bug #7) |
+| 2026-07-07 | STEP 4 Phase 3 (cont.) | Supabase CLI installed as workspace dev dependency (v2.109.0) |
 | 2026-07-07 | STEP 4 Phase 4 | Awaiting user to configure 3 required Replit Secrets |
 
 *This document will be updated after each subsequent phase.*

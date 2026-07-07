@@ -139,19 +139,22 @@ ORDER BY r.name;
 -- =============================================================================
 -- AUDIT 10: Current admin users (if any)
 -- Expected: 0 rows before first Super Admin bootstrap
+-- NOTE: admin_users does not store full_name/email; those are on profiles.
 -- =============================================================================
 \echo '--- AUDIT 10: Admin users (expect 0 before bootstrap) ---'
 SELECT
     au.id,
-    au.full_name,
-    au.email,
+    au.user_id,
+    p.full_name,
+    p.email,
     au.status,
     au.created_at,
     STRING_AGG(r.name, ', ' ORDER BY r.name) AS roles
 FROM public.admin_users au
+LEFT JOIN public.profiles p ON p.id = au.user_id
 LEFT JOIN public.admin_user_roles aur ON aur.admin_user_id = au.id
 LEFT JOIN public.admin_roles r ON r.id = aur.role_id
-GROUP BY au.id, au.full_name, au.email, au.status, au.created_at
+GROUP BY au.id, au.user_id, p.full_name, p.email, au.status, au.created_at
 ORDER BY au.created_at;
 
 -- =============================================================================

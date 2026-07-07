@@ -255,27 +255,29 @@ COMMENT ON FUNCTION public.admin_archive_product(UUID, TEXT) IS
     'SECURITY DEFINER.';
 
 -- ---------------------------------------------------------------------------
--- FUNCTION: admin_update_app_setting(p_key text, p_value jsonb)
+-- FUNCTION: admin_update_app_setting(p_key text, p_value text)
 -- Updates a single app_settings row by its text key.
 -- Upserts: creates the row if the key does not exist.
 --
+-- NOTE: p_value is TEXT (matching app_settings.value column type).
+-- Callers must serialize numeric/boolean/json values to text before calling.
 -- NOTE: is_public and description cannot be changed via this function.
 -- Structural changes to app_settings must be done via SQL migration.
 -- ---------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.admin_update_app_setting(
     p_key         TEXT,
-    p_value       JSONB,
+    p_value       TEXT,
     p_description TEXT DEFAULT NULL
 )
 RETURNS public.app_settings
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $$
+AS $
 DECLARE
     v_admin_user_id UUID;
     v_setting       public.app_settings;
-    v_old_value     JSONB;
+    v_old_value     TEXT;
 BEGIN
     PERFORM public.assert_active_admin('settings.update');
 
@@ -326,10 +328,11 @@ BEGIN
 END;
 $$;
 
-COMMENT ON FUNCTION public.admin_update_app_setting(TEXT, JSONB, TEXT) IS
+COMMENT ON FUNCTION public.admin_update_app_setting(TEXT, TEXT, TEXT) IS
     'Updates (or inserts) an app_settings record by key. '
+    'p_value must be a TEXT representation of the value (number/boolean/json as string). '
     'is_public cannot be changed via this function — use migrations. '
-    'Requires settings.manage permission. Writes audit log. SECURITY DEFINER.';
+    'Requires settings.update permission. Writes audit log. SECURITY DEFINER.';
 
 -- ---------------------------------------------------------------------------
 -- PRIVILEGES
@@ -337,12 +340,12 @@ COMMENT ON FUNCTION public.admin_update_app_setting(TEXT, JSONB, TEXT) IS
 REVOKE ALL ON FUNCTION public.admin_block_customer(UUID, TEXT)          FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.admin_unblock_customer(UUID)              FROM PUBLIC;
 REVOKE ALL ON FUNCTION public.admin_archive_product(UUID, TEXT)         FROM PUBLIC;
-REVOKE ALL ON FUNCTION public.admin_update_app_setting(TEXT, JSONB, TEXT) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.admin_update_app_setting(TEXT, TEXT, TEXT) FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION public.admin_block_customer(UUID, TEXT)       TO authenticated;
 GRANT EXECUTE ON FUNCTION public.admin_unblock_customer(UUID)           TO authenticated;
 GRANT EXECUTE ON FUNCTION public.admin_archive_product(UUID, TEXT)      TO authenticated;
-GRANT EXECUTE ON FUNCTION public.admin_update_app_setting(TEXT, JSONB, TEXT) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.admin_update_app_setting(TEXT, TEXT, TEXT) TO authenticated;
 
 -- =============================================================================
 -- END OF MIGRATION 024

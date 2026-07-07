@@ -217,7 +217,7 @@ REVOKE EXECUTE ON FUNCTION public.mark_all_my_notifications_read()              
 REVOKE EXECUTE ON FUNCTION public.admin_block_customer(UUID, TEXT)                     FROM anon;
 REVOKE EXECUTE ON FUNCTION public.admin_unblock_customer(UUID)                         FROM anon;
 REVOKE EXECUTE ON FUNCTION public.admin_archive_product(UUID, TEXT)                    FROM anon;
-REVOKE EXECUTE ON FUNCTION public.admin_update_app_setting(TEXT, JSONB, TEXT)          FROM anon;
+REVOKE EXECUTE ON FUNCTION public.admin_update_app_setting(TEXT, TEXT, TEXT)          FROM anon;
 
 -- ===========================================================================
 -- STEP 8: Grant product availability check to anon (for app pre-auth init)
