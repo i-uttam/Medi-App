@@ -1,0 +1,137 @@
+I need to bootstrap the first Super Admin for this pharmacy application.
+
+The real Supabase project is already linked and all migrations 001–026 are applied.
+
+IMPORTANT:
+
+Do not create a fake admin.
+Do not create a demo admin.
+Do not hardcode an admin email.
+Do not modify the RBAC architecture.
+Do not create duplicate roles.
+Do not use auth metadata for admin authorization.
+Do not expose the service role key.
+Do not execute destructive SQL.
+
+First read completely:
+
+docs/SUPER_ADMIN_BOOTSTRAP.md
+
+Then inspect the actual remote database architecture and migrations for:
+
+admin_users
+admin_roles
+admin_permissions
+admin_role_permissions
+admin_user_roles
+profiles
+
+Also inspect the actual enum values and constraints used by admin_users.
+
+TASK:
+
+Explain the exact first Super Admin bootstrap process for THIS EXISTING PROJECT.
+
+First verify whether a Super Admin already exists.
+
+If a Super Admin already exists:
+
+* Do not create another automatically.
+* Report the existing Super Admin bootstrap state safely.
+* Do not expose unnecessary private customer information.
+
+If no Super Admin exists:
+
+1. Check Supabase Auth for the user account that I want to promote.
+2. Do not automatically select a random user.
+3. Ask me to provide the EMAIL of the existing Supabase Auth user that I want to make Super Admin.
+4. Do not ask me for the user's password.
+5. Resolve the auth.users UUID from that email safely.
+6. Verify the matching profiles record exists.
+7. Verify the user is not already an admin.
+8. Verify the system Super Admin role exists.
+9. Verify required admin permissions exist.
+10. Verify the Super Admin role has the intended permission relationships.
+
+After I provide the email, prepare the exact bootstrap operation using the architecture documented in docs/SUPER_ADMIN_BOOTSTRAP.md.
+
+Prefer the existing documented bootstrap SQL or approved bootstrap function.
+
+Do not invent a new authorization architecture.
+
+Before execution, show me a concise summary of:
+
+* Target auth user email
+* Target auth user UUID
+* Existing profile found: YES/NO
+* Existing admin record: YES/NO
+* Super Admin role found: YES/NO
+* Bootstrap method that will be used
+
+Do not show secrets.
+
+Then ask for my explicit confirmation before executing the Super Admin bootstrap.
+
+After I confirm:
+
+* Create the admin_users relationship if required.
+* Assign the existing Super Admin role.
+* Do not duplicate admin_users records.
+* Do not duplicate admin_user_roles relationships.
+* Preserve the existing auth user.
+* Preserve the existing profile.
+* Do not change the user's password.
+* Do not create a second authentication system.
+* Do not store admin role in auth metadata.
+* Create required audit information if the current bootstrap architecture supports it.
+
+After bootstrap, verify using the real remote database:
+
+* auth user exists
+* profile exists
+* admin_users record exists
+* admin is active
+* Super Admin role is assigned
+* role permission relationships exist
+* is_admin() returns the expected result in an appropriate authenticated test context
+* is_active_admin() returns the expected result
+* is_super_admin() returns the expected result
+* has_admin_permission() architecture resolves Super Admin permissions correctly
+
+Do not pretend auth.uid()-dependent tests passed if an authenticated database context was not available.
+
+Clearly report TEST NOT EXECUTED where appropriate.
+
+Finally provide:
+
+SUPER ADMIN BOOTSTRAP STATUS
+
+AUTH USER STATUS
+
+PROFILE STATUS
+
+ADMIN USER STATUS
+
+SUPER ADMIN ROLE STATUS
+
+ROLE ASSIGNMENT STATUS
+
+PERMISSION STATUS
+
+AUTHORIZATION FUNCTION VERIFICATION
+
+FINAL RESULT
+
+FINAL RESULT must be exactly one of:
+
+SUPER ADMIN BOOTSTRAP COMPLETE
+
+SUPER ADMIN ALREADY EXISTS
+
+SUPER ADMIN BOOTSTRAP NOT COMPLETE
+
+Stop after this task.
+
+Do not build the admin panel.
+Do not build mobile UI.
+Do not continue to the next roadmap step.

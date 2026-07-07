@@ -22,7 +22,7 @@ This guide covers the one-time manual process to create the first Super Admin us
 
 Before bootstrapping a Super Admin:
 
-- [ ] All 25 migrations applied (`supabase db push` succeeded)
+- [ ] All 26 migrations applied (`supabase db push` succeeded)
 - [ ] Admin roles and permissions seeded (migration 002 handles this)
 - [ ] You have access to Supabase Dashboard → Authentication → Users
 - [ ] You have access to Supabase SQL Editor (as `postgres`)
@@ -49,19 +49,15 @@ Copy the generated **UUID** (`id` column in auth.users).
 Open **Supabase Dashboard → SQL Editor** and run:
 
 ```sql
--- Replace the UUID and values below with real data
--- DO NOT hardcode these in any source file
+-- Replace the UUID below with the real auth.users.id
+-- DO NOT hardcode this in any source file
+--
+-- NOTE: admin_users stores only (user_id, status).
+-- full_name and email live in the profiles table (auto-created by trigger).
 
-INSERT INTO public.admin_users (
-    user_id,
-    full_name,
-    email,
-    status
-)
+INSERT INTO public.admin_users (user_id, status)
 VALUES (
-    '<UUID_FROM_STEP_1>',           -- auth.users.id for the admin
-    'Super Admin',                   -- display name
-    '<admin_email@yourdomain.com>',  -- email
+    '<UUID_FROM_STEP_1>',   -- auth.users.id for the admin
     'active'
 )
 RETURNING id;
