@@ -1,0 +1,1797 @@
+You are a senior Mobile Product Designer, React Native Architect, Expo Engineer, and Pharmacy E-commerce UX Specialist.
+
+Continue the existing pharmacy application project.
+
+CURRENT VERIFIED PROJECT STATE:
+
+* Product requirements documentation exists.
+* Feature behaviour documentation exists.
+* User flow documentation exists.
+* Admin flow documentation exists.
+* Edge case documentation exists.
+* Real Supabase project is linked.
+* Database migrations 001–026 are applied and synced with the remote database.
+* All application tables have RLS and FORCE RLS enabled.
+* RLS policies are deployed.
+* Admin RBAC architecture is deployed.
+* Secure RPC foundations are deployed.
+* Real Supabase TypeScript database types exist at:
+
+lib/database.types.ts
+
+* First Super Admin bootstrap is complete.
+* No prescription system exists.
+* No Billing/POS system exists.
+
+YOUR TASK IS STEP 4:
+
+BUILD THE CUSTOMER MOBILE APPLICATION FOUNDATION, COMPLETE DESIGN SYSTEM, REUSABLE UI COMPONENT LIBRARY, NAVIGATION ARCHITECTURE, AND VISUAL SCREEN SHELLS.
+
+IMPORTANT:
+
+This step focuses on UI/UX architecture and mobile application foundation.
+
+Do NOT implement complete business logic yet.
+
+Do NOT implement the final Place Order engine.
+
+Do NOT implement online payments.
+
+Do NOT build the Admin Panel in this step.
+
+Do NOT add prescription functionality.
+
+Do NOT add Billing/POS.
+
+Do NOT insert mock medicines into Supabase.
+
+Do NOT insert demo orders.
+
+Do NOT insert fake customers.
+
+Do NOT create fake database records.
+
+Do NOT hardcode product arrays as runtime application data.
+
+Do NOT create fake API responses.
+
+DESIGN DIRECTION
+
+Create a completely original pharmacy application design.
+
+The product experience may take inspiration from modern medicine delivery and healthcare commerce applications, but:
+
+* Do not copy Truemeds UI.
+* Do not copy Netmeds UI.
+* Do not copy copyrighted assets.
+* Do not copy exact screen layouts.
+* Do not copy exact color systems.
+* Do not copy logos.
+* Do not copy illustrations.
+
+The application should feel:
+
+Modern
+
+Clean
+
+Professional
+
+Trustworthy
+
+Premium
+
+Simple
+
+Fast
+
+Healthcare-oriented
+
+Mobile-first
+
+The visual design must not feel like a generic AI-generated dashboard.
+
+Avoid excessive gradients.
+
+Avoid excessive shadows.
+
+Avoid glassmorphism.
+
+Avoid giant rounded cards everywhere.
+
+Avoid excessive pill-shaped components.
+
+Avoid random decorative icons.
+
+Avoid crowded screens.
+
+Avoid desktop-style layouts inside the mobile application.
+
+Use strong spacing, hierarchy, typography, and restrained visual styling.
+
+PHASE 1 — INSPECT EXISTING APPLICATION ARCHITECTURE
+
+Before changing application code, inspect:
+
+package.json
+
+project structure
+
+Expo configuration
+
+app.json
+
+app.config files
+
+tsconfig.json
+
+babel configuration
+
+metro configuration
+
+existing app directory
+
+existing src directory
+
+existing components
+
+existing screens
+
+existing navigation
+
+existing Supabase client
+
+environment variables
+
+existing styling system
+
+existing icon library
+
+existing font configuration
+
+existing state management
+
+existing TanStack Query configuration
+
+existing Zustand stores
+
+existing React Hook Form usage
+
+existing Zod schemas
+
+Determine:
+
+* Whether Expo is already configured.
+* Whether Expo Router is configured.
+* Whether the application uses file-based routing.
+* Whether NativeWind or another styling library exists.
+* Whether a custom theme already exists.
+* Whether duplicate UI systems exist.
+* Whether mock data currently exists in runtime code.
+* Whether previous generated screens exist.
+
+Do not blindly rebuild the entire project.
+
+Preserve valid infrastructure.
+
+Remove or replace conflicting placeholder UI only when required.
+
+Create:
+
+docs/MOBILE_UI_ARCHITECTURE.md
+
+Document the existing state and final chosen mobile UI architecture.
+
+PHASE 2 — VERIFY AND PREPARE MOBILE STACK
+
+The preferred customer application stack is:
+
+React Native
+
+Expo
+
+TypeScript
+
+Expo Router
+
+TanStack Query
+
+Zustand
+
+React Hook Form
+
+Zod
+
+Supabase JavaScript client
+
+Use stable versions compatible with the existing Expo SDK.
+
+Do not blindly install the latest package if it conflicts with the current Expo SDK.
+
+Use:
+
+npx expo install
+
+for Expo-managed native dependencies where appropriate.
+
+Do not install duplicate libraries for the same purpose.
+
+Do not install multiple state management libraries.
+
+Do not install multiple form libraries.
+
+Do not install multiple icon libraries unless technically required.
+
+Preferred icon library:
+
+@expo/vector-icons
+
+or the icon system already included by Expo.
+
+Do not use emoji as production UI icons.
+
+PHASE 3 — CREATE MOBILE DESIGN TOKENS
+
+Create a centralized mobile design token architecture.
+
+Suggested location:
+
+constants/theme.ts
+
+or an equivalent architecture consistent with the project.
+
+Define:
+
+COLORS
+
+SPACING
+
+RADIUS
+
+TYPOGRAPHY
+
+FONT_SIZE
+
+FONT_WEIGHT
+
+LINE_HEIGHT
+
+SHADOWS
+
+ICON_SIZE
+
+CONTROL_HEIGHT
+
+LAYOUT
+
+Z_INDEX
+
+Do not scatter arbitrary hexadecimal colors throughout screen files.
+
+Create a restrained healthcare-oriented color system.
+
+Use an original visual identity.
+
+Suggested visual direction:
+
+Primary:
+Deep medical teal or healthcare green.
+
+Primary dark:
+Used for high-emphasis states.
+
+Primary soft:
+Used for subtle selected backgrounds.
+
+Background:
+Very light neutral background.
+
+Surface:
+White.
+
+Surface secondary:
+Subtle cool neutral.
+
+Text primary:
+Near-black neutral.
+
+Text secondary:
+Medium neutral.
+
+Text muted:
+Light neutral.
+
+Border:
+Subtle neutral border.
+
+Success:
+Accessible green.
+
+Warning:
+Accessible amber.
+
+Error:
+Accessible red.
+
+Info:
+Accessible blue.
+
+Do not use pure black for all text.
+
+Do not use random colors per screen.
+
+Ensure accessible contrast.
+
+RADIUS SYSTEM
+
+Use a restrained radius scale.
+
+Example concepts:
+
+small
+
+medium
+
+large
+
+Do not use extreme 24–40 pixel rounded corners on every card.
+
+Buttons and inputs may use a consistent moderate radius.
+
+SPACING SYSTEM
+
+Use a consistent spacing scale.
+
+Example:
+
+2
+
+4
+
+8
+
+12
+
+16
+
+20
+
+24
+
+32
+
+40
+
+48
+
+Do not use arbitrary spacing values everywhere.
+
+TYPOGRAPHY
+
+Create a clear hierarchy for:
+
+Display
+
+Heading 1
+
+Heading 2
+
+Heading 3
+
+Title
+
+Body Large
+
+Body
+
+Body Small
+
+Caption
+
+Button
+
+Price Large
+
+Price
+
+Use system fonts initially unless a font is already approved and correctly configured.
+
+Do not add a custom font only for decoration.
+
+PHASE 4 — SAFE AREA AND SYSTEM NAVIGATION FOUNDATION
+
+The application must correctly support Android and iOS safe areas.
+
+Use react-native-safe-area-context correctly.
+
+Create a reusable screen foundation.
+
+The application content must never overlap:
+
+Android status bar
+
+iOS status bar
+
+Android gesture navigation area
+
+Android three-button navigation area
+
+iPhone home indicator
+
+Bottom tab bar
+
+Keyboard
+
+IMPORTANT:
+
+The bottom navigation must not overlap the Android system Back, Home, or Recent Apps navigation buttons.
+
+Use safe area bottom insets.
+
+Do not use a hardcoded bottom margin as the primary solution.
+
+Create reusable layout components such as:
+
+Screen
+
+ScrollableScreen
+
+KeyboardScreen
+
+SafeBottomContainer
+
+The exact names may adapt to the architecture.
+
+PHASE 5 — APP ROUTE ARCHITECTURE
+
+Use Expo Router.
+
+Create a clear route architecture.
+
+Conceptually:
+
+app/
+_layout.tsx
+
+(auth)/
+_layout.tsx
+login.tsx
+verify-otp.tsx
+
+(tabs)/
+_layout.tsx
+index.tsx
+categories.tsx
+orders.tsx
+profile.tsx
+
+search/
+index.tsx
+
+category/
+[id].tsx
+
+product/
+[id].tsx
+
+cart/
+index.tsx
+
+addresses/
+index.tsx
+create.tsx
+[id]/
+edit.tsx
+
+checkout/
+index.tsx
+
+order/
+success.tsx
+[id].tsx
+
+notifications/
+index.tsx
+
+profile/
+edit.tsx
+
+support/
+index.tsx
+
+The exact folder structure may adapt to valid existing Expo Router conventions.
+
+Requirements:
+
+* Typed route usage where practical.
+* No giant conditional navigation component.
+* No manually managed screen string registry.
+* No duplicated screen routes.
+* Auth routes separated from authenticated app routes.
+* Tab routes separated from stack routes.
+
+PHASE 6 — ROOT APPLICATION PROVIDERS
+
+Create a clean root provider architecture.
+
+Configure:
+
+SafeAreaProvider
+
+TanStack Query QueryClientProvider
+
+Authentication/session provider foundation if required
+
+Theme foundation
+
+Global toast/feedback foundation if required
+
+Do not create a deeply nested provider mess.
+
+Do not initialize QueryClient inside a screen render.
+
+Use one stable QueryClient instance.
+
+Configure reasonable TanStack Query defaults.
+
+Do not globally retry every failed mutation automatically.
+
+Network queries may use controlled retry behaviour.
+
+Mutations should not create accidental duplicate commerce operations.
+
+PHASE 7 — SUPABASE CLIENT FOUNDATION
+
+Inspect the existing Supabase client.
+
+Use the real environment variables already prepared.
+
+For Expo, use:
+
+EXPO_PUBLIC_SUPABASE_URL
+
+and the configured public publishable key variable.
+
+Use the actual environment variable naming already approved by the project.
+
+Do not use:
+
+SUPABASE_ACCESS_TOKEN
+
+SUPABASE_DB_PASSWORD
+
+service_role
+
+secret key
+
+inside the mobile application.
+
+Configure Supabase session persistence correctly for React Native.
+
+Use the appropriate Expo/React Native storage adapter.
+
+Do not store authentication sessions in Zustand manually if Supabase Auth already manages session persistence.
+
+Create a clean client module.
+
+Example conceptual location:
+
+lib/supabase.ts
+
+Do not create multiple Supabase client instances across screens.
+
+PHASE 8 — DESIGN SYSTEM COMPONENT LIBRARY
+
+Create reusable production-quality mobile UI components.
+
+Use a consistent component architecture.
+
+At minimum create:
+
+AppButton
+
+AppIconButton
+
+AppTextInput
+
+AppSearchBar
+
+AppHeader
+
+BackButton
+
+Screen
+
+ScrollableScreen
+
+KeyboardScreen
+
+Divider
+
+Badge
+
+StatusBadge
+
+PriceDisplay
+
+QuantitySelector
+
+ProductCard
+
+CategoryCard
+
+AddressCard
+
+OrderCard
+
+SectionHeader
+
+EmptyState
+
+ErrorState
+
+LoadingState
+
+Skeleton
+
+ProductCardSkeleton
+
+OrderCardSkeleton
+
+AppModal
+
+ConfirmDialog
+
+BottomSheet foundation if a valid dependency already exists or is intentionally installed
+
+Toast/feedback system
+
+COMPONENT REQUIREMENTS
+
+APP BUTTON
+
+Support:
+
+primary
+
+secondary
+
+outline
+
+ghost
+
+danger
+
+loading
+
+disabled
+
+full width
+
+Do not create separate button components for every screen.
+
+APP TEXT INPUT
+
+Support:
+
+label
+
+placeholder
+
+value
+
+error
+
+helper text
+
+left icon
+
+right action
+
+secure text entry
+
+disabled
+
+keyboard type
+
+Do not allow layout jumping when validation errors appear where avoidable.
+
+APP SEARCH BAR
+
+Support:
+
+search icon
+
+placeholder
+
+input
+
+clear button
+
+loading indicator
+
+focus state
+
+Do not overlap icons and text.
+
+Do not use absolute positioning that breaks on small devices.
+
+APP HEADER
+
+Support:
+
+title
+
+back button
+
+right action
+
+optional subtitle
+
+The back button must remain visible on light backgrounds.
+
+Do not use a white icon on a white header.
+
+BACK BUTTON
+
+Create a reusable accessible back button.
+
+Use theme-aware colors.
+
+Minimum touch target approximately 44x44.
+
+Do not create a different back button style on every screen.
+
+PRICE DISPLAY
+
+Support:
+
+selling price
+
+MRP
+
+discount
+
+Use Indian Rupee formatting.
+
+Do not display paise integers directly.
+
+Create a centralized money formatting utility.
+
+QUANTITY SELECTOR
+
+Support:
+
+decrease
+
+quantity
+
+increase
+
+disabled state
+
+loading state
+
+maximum quantity state
+
+Minimum touch target.
+
+Prevent repeated mutation spam at the UI interaction layer.
+
+PRODUCT CARD
+
+Support:
+
+image
+
+medicine name
+
+manufacturer or brand
+
+pack size
+
+selling price
+
+MRP
+
+discount
+
+stock state
+
+Add button
+
+quantity selector state
+
+featured/best seller badge only when relevant
+
+The product card must be designed for mobile.
+
+Do not create an oversized card.
+
+Do not put excessive text inside the card.
+
+CATEGORY CARD
+
+Support:
+
+category image
+
+category name
+
+press interaction
+
+Use a clean compact visual style.
+
+ADDRESS CARD
+
+Support:
+
+address owner name
+
+phone
+
+formatted address
+
+address type
+
+default indicator
+
+selected state
+
+explicit Edit button
+
+IMPORTANT:
+
+Pressing the address card must NOT automatically enter edit mode.
+
+Editing must only happen when the user presses the dedicated Edit action.
+
+The component API must separate:
+
+onPress
+
+onEdit
+
+ORDER CARD
+
+Support:
+
+order number
+
+date
+
+status
+
+item summary
+
+total
+
+view details interaction
+
+Do not show excessive order metadata in the list card.
+
+EMPTY STATE
+
+Support:
+
+title
+
+description
+
+optional icon or illustration
+
+optional primary action
+
+Do not use fake content to fill empty screens.
+
+PHASE 9 — LOADING, EMPTY, ERROR, AND OFFLINE VISUAL STATES
+
+Every major screen shell must have designed states for:
+
+loading
+
+empty
+
+error
+
+content
+
+where relevant.
+
+Do not show raw error objects.
+
+Do not show:
+
+[object Object]
+
+Supabase technical error messages
+
+PostgreSQL errors
+
+stack traces
+
+to normal users.
+
+Create a centralized user-facing error mapping foundation.
+
+Create reusable retry UI.
+
+For network-sensitive screens, create an offline state foundation.
+
+Do not claim the user is offline solely because one API request failed.
+
+PHASE 10 — AUTH SCREEN VISUAL SHELLS
+
+Create visual shells for:
+
+Login
+
+OTP Verification
+
+Do not implement the complete authentication behaviour yet unless required for navigation preview.
+
+LOGIN SCREEN
+
+Design:
+
+Original app brand placeholder text or temporary internal app name.
+
+Do not copy another pharmacy brand.
+
+Welcome heading.
+
+Short supporting text.
+
+Phone number input.
+
+India country code presentation.
+
+Continue button.
+
+Terms and Privacy acknowledgement.
+
+Keyboard-safe layout.
+
+Do not use a giant decorative illustration that pushes the form below the fold.
+
+OTP SCREEN
+
+Design:
+
+Back button.
+
+Verification heading.
+
+Masked phone number presentation.
+
+OTP input architecture.
+
+Verify button.
+
+Resend state visual foundation.
+
+Timer presentation foundation.
+
+Change phone number action.
+
+Do not implement fake OTP acceptance.
+
+Do not hardcode a test OTP.
+
+PHASE 11 — HOME SCREEN VISUAL SHELL
+
+Create a polished mobile pharmacy home screen shell.
+
+Required structure:
+
+Safe area top.
+
+Delivery location/address header.
+
+Notification action.
+
+Search bar.
+
+Promotional banner area.
+
+Category section.
+
+Featured medicines section.
+
+Best seller section.
+
+Optional recommended section shell only if the approved PRD supports it.
+
+Bottom tab navigation.
+
+HOME HEADER
+
+Display:
+
+Delivery to
+
+selected address summary or location placeholder state
+
+dropdown/chevron affordance
+
+notification icon
+
+Do not make the header excessively tall.
+
+SEARCH BAR
+
+Prominent but compact.
+
+Use the reusable AppSearchBar.
+
+Tapping it should be structurally ready to navigate to Search.
+
+BANNERS
+
+Use a horizontal banner architecture.
+
+Do not hardcode promotional banner content.
+
+If no real database banners exist, show the proper empty/no-banner behaviour.
+
+Do not insert fake banner records.
+
+For visual development, use neutral skeleton or development-only preview boundaries that are not runtime business data.
+
+CATEGORIES
+
+Horizontal category list or compact grid based on the final design.
+
+Use CategoryCard.
+
+Do not hardcode fake categories.
+
+FEATURED MEDICINES
+
+Use horizontal product cards or a compact product layout.
+
+Do not hardcode fake medicines.
+
+Use ProductCard skeletons for loading visual development.
+
+BEST SELLERS
+
+Use the same product design system.
+
+Do not create a completely unrelated card design.
+
+PHASE 12 — SEARCH SCREEN VISUAL SHELL
+
+Create Search screen architecture.
+
+States:
+
+Initial
+
+Focused
+
+Typing
+
+Loading
+
+Suggestions
+
+Recent searches
+
+Results
+
+No results
+
+Error
+
+Design:
+
+Header/back button.
+
+Search input.
+
+Recent search chips/list.
+
+Clear history action.
+
+Suggestion list.
+
+Product results.
+
+Filter action foundation.
+
+Sort action foundation.
+
+Do not implement fake search results.
+
+Do not create hardcoded medicine names.
+
+PHASE 13 — CATEGORY AND PRODUCT LIST VISUAL SHELLS
+
+Create:
+
+Categories tab.
+
+Category product listing screen.
+
+CATEGORIES TAB
+
+Design a clean category browsing experience.
+
+Do not make it look like a desktop grid.
+
+Use mobile-responsive columns.
+
+CATEGORY PRODUCT LIST
+
+Header.
+
+Category title.
+
+Product count foundation.
+
+Filter action.
+
+Sort action.
+
+Product list/grid.
+
+Loading skeletons.
+
+Empty state.
+
+Error state.
+
+Pagination loading state.
+
+Do not hardcode product counts.
+
+PHASE 14 — PRODUCT DETAILS VISUAL SHELL
+
+Create a polished medicine details screen.
+
+Required visual sections:
+
+Header.
+
+Product image gallery.
+
+Medicine name.
+
+Brand/manufacturer.
+
+Pack size.
+
+Price.
+
+MRP.
+
+Discount.
+
+Stock state.
+
+Add to Cart or Quantity Selector.
+
+Product information.
+
+Composition.
+
+Uses.
+
+Similar medicines section shell.
+
+Alternative products section shell only if supported by existing requirements.
+
+Sticky bottom purchase action where appropriate.
+
+IMPORTANT:
+
+Sticky bottom actions must respect safe area bottom inset.
+
+They must not overlap Android system navigation.
+
+Do not show fake medical claims.
+
+Do not hardcode medicine descriptions.
+
+Do not invent product compositions.
+
+PHASE 15 — CART VISUAL SHELL
+
+Create Cart screen.
+
+Design:
+
+Header.
+
+Cart items.
+
+Product image.
+
+Product information.
+
+Price.
+
+Quantity selector.
+
+Remove action.
+
+Unavailable item state.
+
+Price summary.
+
+MRP total.
+
+Product discount.
+
+Coupon discount.
+
+Delivery charge.
+
+Final payable amount.
+
+Proceed to Checkout button.
+
+Empty cart state.
+
+Loading state.
+
+Error state.
+
+The checkout button must respect safe area.
+
+Do not implement authoritative price calculation in the UI.
+
+The UI may render values supplied by future server/query architecture.
+
+PHASE 16 — ADDRESS VISUAL SHELLS
+
+Create:
+
+Address List
+
+Create Address
+
+Edit Address
+
+ADDRESS LIST
+
+Header.
+
+Saved address cards.
+
+Default indicator.
+
+Selected state where used in checkout context.
+
+Dedicated Edit button.
+
+Add New Address action.
+
+Empty state.
+
+IMPORTANT:
+
+Tapping an address card must not trigger editing.
+
+The Edit action is separate.
+
+CREATE/EDIT ADDRESS
+
+Use React Hook Form and Zod form architecture if practical in this step.
+
+Fields:
+
+Full name
+
+Phone
+
+Address line 1
+
+Address line 2
+
+Landmark
+
+City
+
+State
+
+Postal code
+
+Country code foundation
+
+Address type
+
+Default address option
+
+Save button
+
+Keyboard-safe screen.
+
+Do not allow the keyboard to hide the active field or save button permanently.
+
+PHASE 17 — CHECKOUT VISUAL SHELL
+
+Create Checkout screen.
+
+Design:
+
+Header.
+
+Delivery address section.
+
+Explicit Change or Edit address action.
+
+Order item summary.
+
+Coupon section.
+
+Payment method section.
+
+Cash on Delivery selected state.
+
+Price summary.
+
+Place Order button.
+
+Loading visual state.
+
+Error visual state.
+
+IMPORTANT:
+
+Do not implement final order creation.
+
+Do not create an order directly from the client.
+
+Do not create fake order success.
+
+The Place Order action must remain clearly marked in code as pending the secure order engine implementation.
+
+Do not create an insecure temporary order INSERT.
+
+PHASE 18 — ORDER VISUAL SHELLS
+
+Create:
+
+Orders tab.
+
+Order Details.
+
+Order Success shell.
+
+ORDERS TAB
+
+Sections or filters only if approved.
+
+Order cards.
+
+Loading skeleton.
+
+Empty state.
+
+Error state.
+
+ORDER DETAILS
+
+Order number.
+
+Order status.
+
+Status timeline.
+
+Products.
+
+Delivery address snapshot section.
+
+Payment method.
+
+Price summary.
+
+Cancel order action foundation where eligible.
+
+Reorder action foundation.
+
+Do not allow direct order status update from the customer UI.
+
+ORDER SUCCESS
+
+Create the visual shell only.
+
+Do not navigate here using fake order creation.
+
+The screen must be designed to accept a real created order identifier in the future.
+
+PHASE 19 — PROFILE VISUAL SHELL
+
+Create a clean profile screen.
+
+Design direction:
+
+Simple healthcare commerce account screen.
+
+Profile header.
+
+Name.
+
+Phone.
+
+Email where available.
+
+My Orders.
+
+Saved Addresses.
+
+Coupons.
+
+Notifications.
+
+Help & Support.
+
+Privacy Policy.
+
+Terms & Conditions.
+
+About.
+
+Logout.
+
+Delete Account.
+
+Do not copy another app's exact profile layout.
+
+Use reusable menu row components.
+
+Do not use giant profile cards.
+
+PHASE 20 — NOTIFICATION AND SUPPORT VISUAL SHELLS
+
+NOTIFICATIONS
+
+Header.
+
+Notification list.
+
+Unread indicator.
+
+Read state.
+
+Loading.
+
+Empty.
+
+Error.
+
+SUPPORT
+
+Support phone.
+
+Support email.
+
+WhatsApp action if configured.
+
+FAQ foundation only if approved.
+
+Use app settings/config values in future data integration.
+
+Do not hardcode real support contact information.
+
+PHASE 21 — BOTTOM TAB NAVIGATION
+
+Create bottom tabs for:
+
+Home
+
+Categories
+
+Orders
+
+Profile
+
+Use consistent icons.
+
+Use text labels.
+
+Use active and inactive states.
+
+Do not use a floating center button.
+
+Do not overlap Android system navigation.
+
+Respect bottom safe area.
+
+The bottom tab bar should feel compact and native.
+
+Do not make it excessively tall.
+
+Do not apply giant rounded container styling around the entire tab bar.
+
+PHASE 22 — RESPONSIVE MOBILE BEHAVIOUR
+
+Test visual architecture against conceptual device widths:
+
+320
+
+360
+
+375
+
+390
+
+412
+
+430
+
+Do not use fixed screen widths.
+
+Avoid absolute positioning for core layouts.
+
+Use flex layouts.
+
+Use responsive card widths.
+
+Product card content must not overlap.
+
+Search input icons must not overlap text.
+
+Long medicine names must truncate intentionally.
+
+Long addresses must wrap.
+
+Long customer names must not break headers.
+
+Large Android font scaling must remain reasonably usable.
+
+PHASE 23 — ACCESSIBILITY FOUNDATION
+
+Add:
+
+accessibility labels where icons have no text
+
+button roles
+
+minimum touch targets
+
+readable contrast
+
+logical press areas
+
+disabled state semantics
+
+loading state semantics
+
+Do not rely only on color to communicate order status.
+
+PHASE 24 — DEVELOPMENT PREVIEW WITHOUT MOCK BUSINESS DATA
+
+The app must remain visually testable without inserting fake database records.
+
+Allowed:
+
+Skeleton loaders.
+
+Empty states.
+
+Component development preview files excluded from production runtime.
+
+Story-style local component preview routes available only in development mode if the project architecture supports it.
+
+Not allowed:
+
+Runtime fake medicine arrays.
+
+Runtime fake orders.
+
+Runtime fake customers.
+
+Fallback demo catalog.
+
+Automatic database seeding.
+
+If creating a development-only component gallery, clearly isolate it and ensure it cannot appear in production builds.
+
+PHASE 25 — CODE QUALITY REVIEW
+
+After implementation:
+
+Inspect for:
+
+duplicate components
+
+duplicate theme values
+
+inline random colors
+
+inline arbitrary spacing
+
+giant screen files
+
+unused dependencies
+
+unused imports
+
+TypeScript any usage
+
+unsafe route params
+
+hardcoded fake data
+
+hardcoded medicine names
+
+hardcoded orders
+
+hardcoded support details
+
+service role exposure
+
+Supabase access token exposure
+
+database password exposure
+
+console logging of sensitive data
+
+Fix issues found.
+
+PHASE 26 — VISUAL QA
+
+Run the application.
+
+Verify:
+
+App starts.
+
+Expo Router resolves routes.
+
+No route crash.
+
+No provider crash.
+
+Safe areas work.
+
+Bottom navigation does not overlap system navigation.
+
+Back buttons remain visible.
+
+Search bar does not overlap.
+
+Product card layout remains stable.
+
+Address card Edit action is visually separate.
+
+Checkout layout is usable.
+
+Sticky actions respect safe areas.
+
+Keyboard screens remain usable.
+
+Loading states render.
+
+Empty states render.
+
+Error states render.
+
+No fake products are shown.
+
+No fake orders are shown.
+
+No fake customers are shown.
+
+Capture or inspect the available application preview where the Replit environment supports it.
+
+Fix visible layout problems before finishing.
+
+PHASE 27 — DOCUMENTATION
+
+Create or update:
+
+docs/MOBILE_UI_ARCHITECTURE.md
+
+Create:
+
+docs/DESIGN_SYSTEM.md
+
+Create:
+
+docs/MOBILE_ROUTE_MAP.md
+
+Document:
+
+Design tokens.
+
+Typography.
+
+Spacing.
+
+Radius.
+
+Component library.
+
+Screen layout architecture.
+
+Safe area strategy.
+
+Bottom tab strategy.
+
+Navigation architecture.
+
+Loading states.
+
+Empty states.
+
+Error states.
+
+Development preview strategy.
+
+Future data integration points.
+
+FINAL REPORT
+
+Provide:
+
+MOBILE STACK STATUS
+
+EXPO ROUTER STATUS
+
+DESIGN SYSTEM STATUS
+
+COMPONENT LIBRARY STATUS
+
+SAFE AREA STATUS
+
+BOTTOM NAVIGATION STATUS
+
+AUTH SCREEN UI STATUS
+
+HOME UI STATUS
+
+SEARCH UI STATUS
+
+CATEGORY UI STATUS
+
+PRODUCT DETAILS UI STATUS
+
+CART UI STATUS
+
+ADDRESS UI STATUS
+
+CHECKOUT UI STATUS
+
+ORDER UI STATUS
+
+PROFILE UI STATUS
+
+NOTIFICATION UI STATUS
+
+SUPPORT UI STATUS
+
+MOCK DATA AUDIT
+
+VISUAL QA STATUS
+
+FILES CREATED OR MODIFIED
+
+KNOWN LIMITATIONS
+
+FINAL RESULT
+
+FINAL RESULT must be exactly one of:
+
+STEP 4 MOBILE UI FOUNDATION COMPLETE
+
+STEP 4 MOBILE UI FOUNDATION PARTIALLY COMPLETE
+
+STEP 4 MOBILE UI FOUNDATION NOT COMPLETE
+
+Stop after completing the mobile UI foundation.
+
+Do not continue to authentication business logic.
+
+Do not continue to product database integration.
+
+Do not continue to cart backend integration.
+
+Do not implement Place Order.
+
+Do not build the Admin Panel.
+
+Wait for the next instruction.
