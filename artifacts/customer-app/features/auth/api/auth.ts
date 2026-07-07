@@ -167,3 +167,82 @@ export async function loadProfileWithRetry(
 export async function signOut(): Promise<void> {
   await supabase.auth.signOut();
 }
+
+// ── Temporary Email + Password Auth ───────────────────────────────────────────
+//
+// TEMPORARY DEVELOPMENT FEATURE — DO NOT ENABLE FOR PRODUCTION RELEASE.
+//
+// These operations use real Supabase Auth signInWithPassword / signUp.
+// Sessions are shared with the existing Phone OTP session architecture —
+// no separate storage, no separate state, no auth bypasses.
+//
+// The onAuthStateChange listener in AuthProvider handles the resulting
+// SIGNED_IN event exactly as it does for Phone OTP sign-in.
+
+export interface EmailSignInResult {
+  error: string | null;
+}
+
+/**
+ * Sign in with real Supabase Email + Password.
+ *
+ * On success the Supabase client session is set automatically —
+ * the onAuthStateChange listener will receive SIGNED_IN.
+ * Do NOT manually navigate after calling this; let the existing
+ * route-protection hook in _layout.tsx handle the redirect.
+ *
+ * @param email    - Validated, trimmed, lowercased email address.
+ * @param password - User-provided password (never logged or stored).
+ */
+export async function signInWithEmailPassword(
+  email: string,
+  password: string,
+): Promise<EmailSignInResult> {
+  try {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) return { error: mapAuthError(error).message };
+    return { error: null };
+  } catch (err) {
+    return { error: mapUnknownError(err) };
+  }
+}
+
+export interface EmailSignUpResult {
+  error: string | null;
+  /**
+   * True when Supabase created the user but returned no session —
+   * typically because email confirmation is required.
+   * The caller should prompt the user to check their inbox and switch to Sign In.
+   */
+  requiresEmailConfirmation: boolean;
+}
+
+/**
+ * Sign up with real Supabase Email + Password.
+ *
+ * CASE A — Session returned: AuthProvider processes SIGNED_IN automatically.
+ * CASE B — No session: email confirmation is required; caller shows prompt.
+ * CASE C — Error: normalized message returned.
+ *
+ * @param email    - Validated, trimmed, lowercased email address.
+ * @param password - User-provided password (never logged or stored).
+ */
+export async function signUpWithEmailPassword(
+  email: string,
+  password: string,
+): Promise<EmailSignUpResult> {
+  try {
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (error) {
+      return { error: mapAuthError(error).message, requiresEmailConfirmation: false };
+    }
+    // Supabase returned a user but no session → email confirmation needed.
+    if (data.user && !data.session) {
+      return { error: null, requiresEmailConfirmation: true };
+    }
+    // Session returned — AuthProvider's onAuthStateChange handles navigation.
+    return { error: null, requiresEmailConfirmation: false };
+  } catch (err) {
+    return { error: mapUnknownError(err), requiresEmailConfirmation: false };
+  }
+}

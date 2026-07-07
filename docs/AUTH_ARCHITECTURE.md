@@ -246,6 +246,26 @@ A future implementation must:
 
 ---
 
+## Temporary Email + Password Authentication (Development Only)
+
+> **TEMPORARY DEVELOPMENT FEATURE — DO NOT ENABLE FOR PRODUCTION RELEASE.**
+>
+> See `docs/TEMPORARY_EMAIL_AUTH.md` for the full specification, removal checklist, and Supabase Dashboard configuration requirements.
+
+When `EXPO_PUBLIC_ENABLE_TEMPORARY_EMAIL_AUTH=true`, a "Continue with Email" option appears on the Login screen. This routes to `/(auth)/email-auth`, which uses real `supabase.auth.signInWithPassword` / `supabase.auth.signUp`.
+
+Email + Password sessions share **all** existing architecture:
+- Same `AuthProvider` state machine and `onAuthStateChange` listener.
+- Same `AsyncStorage`-backed session persistence and `autoRefreshToken`.
+- Same `useRouteProtection` hook — no special bypass for email users.
+- Same blocked-customer detection, profile loading, logout, and cache clearing.
+
+The `handle_new_auth_user` DB trigger handles email-only users correctly (`profiles.phone` is nullable; `NULL` is stored for email users — no migration required).
+
+When the flag is `false` (the default), the email-auth route redirects to Login automatically. Phone OTP authentication is unaffected by this flag.
+
+---
+
 ## Security Constraints
 
 - No service_role key in mobile runtime.

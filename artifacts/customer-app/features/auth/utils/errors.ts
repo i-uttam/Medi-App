@@ -110,6 +110,64 @@ const ERROR_PATTERNS: ErrorPattern[] = [
       shouldResend: false,
     },
   },
+
+  // ── Email + Password error patterns (temporary dev feature) ────────────────
+
+  // Invalid login credentials (wrong email or password)
+  {
+    test: (e) =>
+      /invalid.*login.*credential|invalid.*credential|invalid.*password|wrong.*password/i.test(e.message) ||
+      /email.*not.*found|user.*not.*found|no.*user.*found/i.test(e.message),
+    result: {
+      message: 'Incorrect email or password.',
+      canRetry: true,
+      shouldResend: false,
+    },
+  },
+
+  // Email not confirmed
+  {
+    test: (e) =>
+      /email.*not.*confirm|confirm.*email|email.*confirm/i.test(e.message),
+    result: {
+      message: 'Please confirm your email address before signing in.',
+      canRetry: false,
+      shouldResend: false,
+    },
+  },
+
+  // Email already registered
+  {
+    test: (e) =>
+      /user.*already.*register|already.*register|email.*already|duplicate.*user/i.test(e.message),
+    result: {
+      message: 'An account with this email already exists. Try signing in instead.',
+      canRetry: false,
+      shouldResend: false,
+    },
+  },
+
+  // Invalid email format (server-side)
+  {
+    test: (e) =>
+      /invalid.*email|email.*invalid|unable.*validate.*email/i.test(e.message),
+    result: {
+      message: 'Enter a valid email address.',
+      canRetry: true,
+      shouldResend: false,
+    },
+  },
+
+  // Weak password (server-side)
+  {
+    test: (e) =>
+      /password.*weak|weak.*password|password.*too.*short|password.*length/i.test(e.message),
+    result: {
+      message: 'Password is too weak. Use at least 8 characters.',
+      canRetry: true,
+      shouldResend: false,
+    },
+  },
 ];
 
 // ── Public API ─────────────────────────────────────────────────────────────────

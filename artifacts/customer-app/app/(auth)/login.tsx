@@ -17,6 +17,7 @@
 import { AppButton } from '@/components/ui/AppButton';
 import { Screen } from '@/components/layout/Screen';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
+import { ENABLE_TEMPORARY_EMAIL_AUTH } from '@/constants/features';
 import { FONT_FAMILY, FONT_SIZE, FONT_WEIGHT, RADIUS, SPACING } from '@/constants/theme';
 import { requestPhoneOtp } from '@/features/auth/api/auth';
 import { normalizeIndianPhone } from '@/features/auth/utils/phone';
@@ -27,6 +28,7 @@ import { useState } from 'react';
 import {
   Linking,
   Platform,
+  Pressable,
   StyleSheet,
   Text,
   TextInput,
@@ -152,6 +154,31 @@ export default function LoginScreen() {
           style={styles.btn}
         />
 
+        {/* TEMPORARY DEVELOPMENT FEATURE — hidden in production */}
+        {ENABLE_TEMPORARY_EMAIL_AUTH && (
+          <>
+            <View style={styles.dividerRow}>
+              <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+              <Text style={[styles.dividerLabel, { color: colors.mutedForeground }]}>OR</Text>
+              <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+            </View>
+            <Pressable
+              onPress={() => router.push('/(auth)/email-auth')}
+              style={({ pressed }) => [
+                styles.emailBtn,
+                { borderColor: colors.border, opacity: pressed ? 0.65 : 1 },
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel="Continue with Email (development only)"
+            >
+              <Feather name="mail" size={16} color={colors.mutedForeground} style={styles.emailIcon} />
+              <Text style={[styles.emailBtnText, { color: colors.foreground }]}>
+                Continue with Email
+              </Text>
+            </Pressable>
+          </>
+        )}
+
         {/* Terms */}
         <Text style={[styles.terms, { color: colors.mutedForeground }]}>
           By continuing, you agree to our{' '}
@@ -249,6 +276,36 @@ const styles = StyleSheet.create({
     marginTop: SPACING.xs,
   },
   btn: { marginTop: SPACING.md, marginBottom: SPACING.xl },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SPACING.md,
+  },
+  dividerLine: {
+    flex: 1,
+    height: StyleSheet.hairlineWidth,
+  },
+  dividerLabel: {
+    fontSize: FONT_SIZE.caption,
+    fontFamily: FONT_FAMILY.medium,
+    fontWeight: FONT_WEIGHT.medium,
+    marginHorizontal: SPACING.md,
+  },
+  emailBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 48,
+    borderWidth: 1.5,
+    borderRadius: RADIUS.md,
+    marginBottom: SPACING.xl,
+  },
+  emailIcon: { marginRight: SPACING.sm },
+  emailBtnText: {
+    fontSize: FONT_SIZE.body,
+    fontFamily: FONT_FAMILY.medium,
+    fontWeight: FONT_WEIGHT.medium,
+  },
   terms: {
     fontSize: FONT_SIZE.caption,
     fontFamily: FONT_FAMILY.regular,
