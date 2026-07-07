@@ -1,0 +1,1347 @@
+You are a senior React Native Authentication Engineer, Expo Architect, Supabase Auth Security Engineer, and Mobile Application Security Specialist.
+
+Continue the existing pharmacy mobile application project.
+
+CURRENT VERIFIED PROJECT STATE:
+
+* Product documentation is complete.
+* Feature behaviour documentation is complete.
+* User flow documentation is complete.
+* Real Supabase project is linked.
+* Database migrations 001–026 are applied and synced with the remote Supabase project.
+* RLS and FORCE RLS are enabled on all application tables.
+* RLS policies are deployed.
+* Admin RBAC is deployed.
+* Secure RPC foundations are deployed.
+* First Super Admin bootstrap is complete.
+* Real Supabase TypeScript database types exist at:
+
+lib/database.types.ts
+
+* STEP 4 mobile UI foundation and design system have been created.
+* Expo Router architecture exists.
+* Login and OTP visual shells exist.
+* Customer mobile application UI shells exist.
+* No prescription system exists.
+* No Billing/POS system exists.
+
+YOUR TASK IS STEP 5:
+
+IMPLEMENT REAL SUPABASE CUSTOMER AUTHENTICATION, PHONE OTP LOGIN, SESSION PERSISTENCE, AUTH STATE RESTORATION, PROFILE SYNCHRONIZATION, BLOCKED USER HANDLING, PROTECTED ROUTES, LOGOUT, AND SECURE ACCOUNT AUTH FOUNDATION.
+
+IMPORTANT:
+
+Use the real linked Supabase project.
+
+Do not create mock authentication.
+
+Do not create fake users.
+
+Do not create demo login credentials.
+
+Do not hardcode an OTP.
+
+Do not accept 123456 as a test OTP.
+
+Do not bypass Supabase Auth.
+
+Do not create a second authentication system.
+
+Do not store passwords.
+
+Do not store OTP values.
+
+Do not create custom OTP tables.
+
+Do not use auth metadata for admin authorization.
+
+Do not expose the service role key.
+
+Do not expose the Supabase access token.
+
+Do not expose the database password.
+
+Do not implement Admin Panel login in this step.
+
+Do not implement Google login.
+
+Do not implement email/password customer login unless it already exists as an approved product requirement.
+
+Do not implement prescription functionality.
+
+Do not implement Billing/POS.
+
+PHASE 1 — READ THE EXISTING PROJECT BEFORE CODING
+
+Completely read:
+
+docs/PRD.md
+
+docs/FEATURE_BEHAVIOUR.md
+
+docs/USER_FLOWS.md
+
+docs/EDGE_CASES.md
+
+docs/MOBILE_UI_ARCHITECTURE.md
+
+docs/DESIGN_SYSTEM.md
+
+docs/MOBILE_ROUTE_MAP.md
+
+docs/DATABASE_ARCHITECTURE.md
+
+docs/SECURITY_ARCHITECTURE.md
+
+docs/RLS_SECURITY_PLAN.md
+
+docs/FUNCTION_PRIVILEGES.md
+
+lib/database.types.ts
+
+Inspect:
+
+package.json
+
+Expo SDK version
+
+Expo Router configuration
+
+app/_layout.tsx
+
+auth route group
+
+tab route group
+
+login screen
+
+OTP verification screen
+
+profile screen
+
+Supabase client
+
+environment variables
+
+AsyncStorage configuration
+
+TanStack Query configuration
+
+Zustand stores
+
+existing auth providers
+
+existing session hooks
+
+existing route guards
+
+existing loading screens
+
+existing error mapping
+
+Search the complete runtime codebase for:
+
+mock auth
+
+demo user
+
+fake user
+
+hardcoded OTP
+
+test OTP
+
+bypass login
+
+local authenticated boolean
+
+isLoggedIn hardcoded values
+
+fake session
+
+manual user id
+
+hardcoded user UUID
+
+Do not start implementation until the current auth architecture is understood.
+
+Create:
+
+docs/AUTH_ARCHITECTURE.md
+
+Document:
+
+existing auth state
+
+final auth architecture
+
+Supabase session ownership
+
+route protection strategy
+
+profile synchronization strategy
+
+blocked customer behaviour
+
+OTP flow
+
+logout flow
+
+account deletion boundary
+
+PHASE 2 — VERIFY SUPABASE AUTH CONFIGURATION REQUIREMENTS
+
+Inspect the mobile Supabase client.
+
+The customer mobile application must use only:
+
+EXPO_PUBLIC_SUPABASE_URL
+
+and the approved Supabase public publishable key environment variable.
+
+Use the actual environment variable names already configured by the project.
+
+Do not use:
+
+SUPABASE_ACCESS_TOKEN
+
+SUPABASE_DB_PASSWORD
+
+service_role
+
+secret key
+
+inside the mobile runtime.
+
+Verify the Supabase client uses the real generated Database type.
+
+Conceptually:
+
+createClient<Database>(...)
+
+Use one shared Supabase client instance.
+
+For React Native session persistence, configure the officially supported storage adapter.
+
+Use AsyncStorage if compatible with the installed Supabase client architecture.
+
+Configure:
+
+auth.persistSession = true
+
+auth.autoRefreshToken = true
+
+auth.detectSessionInUrl = false
+
+Use processLock or the currently recommended React Native Supabase locking strategy if supported by the installed package version.
+
+Do not blindly copy outdated Supabase examples.
+
+Inspect the installed @supabase/supabase-js version and implement the compatible configuration.
+
+PHASE 3 — APP LIFECYCLE AUTH TOKEN REFRESH
+
+Implement React Native AppState integration for Supabase Auth token auto-refresh where required by the installed Supabase client version.
+
+When the app becomes active:
+
+start auth auto refresh.
+
+When the app moves to background or inactive state:
+
+stop auth auto refresh.
+
+Do not create multiple AppState listeners.
+
+Clean up listeners correctly.
+
+Do not refresh tokens manually on every screen.
+
+Document this behaviour.
+
+PHASE 4 — CREATE AUTH DOMAIN ARCHITECTURE
+
+Create a clean auth feature module.
+
+Use the existing feature architecture if available.
+
+Conceptual structure:
+
+features/
+auth/
+api/
+hooks/
+schemas/
+types/
+utils/
+
+or an equivalent structure consistent with the project.
+
+Create centralized auth operations for:
+
+requestPhoneOtp
+
+verifyPhoneOtp
+
+getCurrentSession
+
+getCurrentUser
+
+signOut
+
+refreshSession if explicitly required
+
+Do not call supabase.auth directly from multiple screen files.
+
+Screen files should use feature hooks/services.
+
+Use typed errors.
+
+Create a normalized AuthError model for user-facing behaviour.
+
+PHASE 5 — PHONE NUMBER NORMALIZATION
+
+The customer login flow is India-focused.
+
+Create a centralized phone normalization utility.
+
+The login UI may visually display:
+
++91
+
+The user enters the Indian mobile number.
+
+Normalize before sending to Supabase Auth.
+
+Expected canonical format:
+
++91XXXXXXXXXX
+
+Rules:
+
+* trim whitespace
+* remove visual spaces
+* remove hyphens
+* handle an entered +91 prefix safely
+* handle an entered 91 prefix only when the remaining value is a valid 10-digit mobile number
+* reject invalid lengths
+* reject alphabetic characters
+* do not silently transform arbitrary international numbers into Indian numbers
+
+Use Zod for login validation.
+
+Create tests for normalization logic if the project has a test framework.
+
+Do not scatter phone normalization regex across multiple files.
+
+PHASE 6 — REAL OTP REQUEST
+
+Implement real Supabase phone OTP request.
+
+Use the actual supported Supabase Auth API.
+
+Conceptually:
+
+supabase.auth.signInWithOtp({
+phone: normalizedPhone
+})
+
+Use the API compatible with the installed Supabase version.
+
+Do not use fake API calls.
+
+Do not create a timeout that pretends the OTP was sent.
+
+Do not navigate to OTP verification before Supabase confirms the OTP request was accepted.
+
+REQUEST FLOW:
+
+1. User enters phone number.
+2. Client validates the number.
+3. Normalize to canonical E.164 format.
+4. Disable Continue button while request is pending.
+5. Prevent repeated taps.
+6. Call real Supabase Auth.
+7. Handle the Supabase response.
+8. On success, navigate to OTP verification.
+9. Pass only the normalized phone number or safe route state required by the verification flow.
+10. Do not pass OTP.
+11. Do not pass secrets.
+12. Do not store OTP locally.
+
+LOADING BEHAVIOUR:
+
+Show button loading state.
+
+Keep phone input visible.
+
+Do not show a full-screen spinner for a normal OTP request.
+
+SUCCESS:
+
+Navigate to the OTP verification route.
+
+FAILURE:
+
+Remain on login.
+
+Re-enable Continue.
+
+Map technical errors to human-readable messages.
+
+Do not display raw Supabase errors.
+
+RATE LIMIT:
+
+If Supabase returns a rate-limit error, display a clear retry-later message.
+
+Do not automatically retry OTP requests.
+
+PHASE 7 — OTP VERIFICATION INPUT
+
+Implement a production-quality OTP input.
+
+Use the approved OTP screen visual design.
+
+Requirements:
+
+* numeric input
+* expected OTP length based on Supabase phone OTP behaviour
+* support paste
+* support backspace
+* support focus movement
+* keyboard type numeric
+* accessible
+* avoid six unrelated uncontrolled TextInput components if that causes unstable focus behaviour
+
+Preferred architecture:
+
+Use one hidden or controlled TextInput as the source of truth and render visual OTP cells.
+
+If the existing OTP component is robust, preserve it.
+
+OTP must exist only in component/form memory.
+
+Do not persist OTP in:
+
+AsyncStorage
+
+Zustand persisted storage
+
+SecureStore
+
+database
+
+route history
+
+logs
+
+analytics
+
+PHASE 8 — REAL OTP VERIFICATION
+
+Implement real Supabase OTP verification.
+
+Use the supported API.
+
+Conceptually:
+
+supabase.auth.verifyOtp({
+phone: normalizedPhone,
+token: otp,
+type: 'sms'
+})
+
+Use the actual API compatible with the installed Supabase client version.
+
+VERIFICATION FLOW:
+
+1. Validate OTP format.
+2. Disable Verify while pending.
+3. Prevent repeated Verify taps.
+4. Call Supabase Auth.
+5. Verify the response contains a valid authentication result.
+6. Allow the centralized auth state listener to receive the session.
+7. Load the authenticated profile.
+8. Evaluate customer account status.
+9. Route based on the verified auth/profile state.
+
+Do not manually create a fake session.
+
+Do not manually write Supabase access tokens to AsyncStorage.
+
+Do not manually decode JWTs to decide whether the customer is authenticated.
+
+SUCCESS:
+
+If profile exists and customer is active:
+
+Enter the authenticated application.
+
+If profile creation trigger execution is still propagating:
+
+Use a short controlled profile refetch strategy.
+
+Do not create duplicate profile rows from the mobile client.
+
+If profile remains unavailable:
+
+Show a recoverable account initialization error.
+
+Do not enter the authenticated app with an undefined profile indefinitely.
+
+If customer is blocked:
+
+Route to blocked account behaviour.
+
+FAILURE:
+
+Incorrect OTP:
+
+Show a clear invalid verification code message.
+
+Expired OTP:
+
+Show an expired code message and allow resend.
+
+Network failure:
+
+Keep the OTP entered where safe.
+
+Allow retry.
+
+Unknown auth error:
+
+Show a generic verification failure message.
+
+Do not expose raw technical details.
+
+PHASE 9 — AUTH STATE PROVIDER
+
+Implement one centralized authentication state architecture.
+
+Create an AuthProvider or equivalent approved architecture.
+
+The auth state must distinguish at minimum:
+
+initializing
+
+unauthenticated
+
+authenticated_profile_loading
+
+authenticated_active
+
+authenticated_blocked
+
+authenticated_profile_error
+
+Do not use only:
+
+isLoggedIn: boolean
+
+The provider must manage:
+
+Supabase session
+
+authenticated user
+
+customer profile
+
+auth initialization
+
+profile loading
+
+blocked state
+
+auth state change subscription
+
+sign out coordination
+
+Do not use Zustand as a duplicate source of truth for the Supabase session.
+
+Zustand may store non-sensitive UI/application state where appropriate.
+
+Supabase Auth remains the source of truth for authentication session.
+
+PHASE 10 — INITIAL SESSION RESTORATION
+
+Implement exact app initialization behaviour.
+
+On cold app start:
+
+1. Initialize the Supabase client.
+2. Restore the persisted Supabase session.
+3. Determine whether a valid session exists.
+4. Subscribe to auth state changes.
+5. If no session exists:
+   auth state becomes unauthenticated.
+6. If a session exists:
+   load the authenticated user's profile.
+7. Evaluate profile status.
+8. Resolve the final auth state.
+9. Only then allow route protection to make the final navigation decision.
+
+IMPORTANT:
+
+Do not briefly flash the Login screen before restoring an existing session.
+
+Do not briefly flash the Home screen before determining auth state.
+
+Create a proper app initialization/loading screen using the existing design system.
+
+Do not use fake artificial delays.
+
+PHASE 11 — AUTH STATE CHANGE SUBSCRIPTION
+
+Use:
+
+supabase.auth.onAuthStateChange(...)
+
+or the compatible API for the installed Supabase version.
+
+Handle relevant events safely.
+
+At minimum evaluate:
+
+INITIAL_SESSION
+
+SIGNED_IN
+
+SIGNED_OUT
+
+TOKEN_REFRESHED
+
+USER_UPDATED
+
+Do not trigger infinite profile refetch loops.
+
+Do not create duplicate listeners.
+
+Unsubscribe correctly.
+
+Do not navigate directly from multiple auth event callbacks.
+
+The centralized auth state should drive route guards.
+
+PHASE 12 — PROFILE LOADING
+
+Load the authenticated customer's profile from the real profiles table.
+
+Use the authenticated user id.
+
+Do not accept a profile user_id from route params.
+
+Do not use a hardcoded UUID.
+
+RLS must enforce ownership.
+
+Use the actual generated Database types.
+
+Profile query behaviour:
+
+* Query only the authenticated profile.
+* Handle zero rows.
+* Handle one row.
+* Treat multiple rows as a data integrity error if technically possible.
+* Do not use an unrestricted profiles query.
+
+Do not use admin RPCs from the customer app.
+
+PHASE 13 — PROFILE SYNCHRONIZATION
+
+The database profile trigger created in the migration architecture is responsible for minimum profile creation after auth user creation.
+
+Inspect the actual trigger and profiles schema.
+
+Determine the source of truth for:
+
+phone
+
+email
+
+full_name
+
+Do not create contradictory profile synchronization.
+
+If Supabase Auth phone is authoritative:
+
+Use auth user phone as the authenticated identity phone.
+
+If profiles.phone mirrors the auth phone:
+
+Synchronize only through the approved architecture.
+
+Do not let the client arbitrarily change the login phone number through a normal profile update field.
+
+Do not implement phone change in this step unless a secure re-verification flow already exists.
+
+If profile email is optional and independent:
+
+Follow the existing database architecture.
+
+Document final source-of-truth decisions in docs/AUTH_ARCHITECTURE.md.
+
+PHASE 14 — BLOCKED CUSTOMER HANDLING
+
+Implement blocked customer UI behaviour.
+
+Create a dedicated blocked account screen or state.
+
+The blocked customer must not enter normal commerce routes.
+
+Display:
+
+Account access restricted heading.
+
+Short human-readable explanation.
+
+Support action foundation.
+
+Sign Out action.
+
+Do not display internal database status names.
+
+Do not display admin notes.
+
+Do not display security implementation details.
+
+The backend already prevents blocked commerce mutations.
+
+The mobile route architecture must also prevent normal commerce navigation for a blocked profile.
+
+Blocked customers may retain access only to behaviour approved by the security architecture.
+
+Do not rely only on UI blocking for security.
+
+PHASE 15 — PROTECTED ROUTE ARCHITECTURE
+
+Implement route protection using Expo Router and the centralized auth state.
+
+Required behaviour:
+
+INITIALIZING:
+
+Show initialization screen.
+
+Do not redirect.
+
+UNAUTHENTICATED:
+
+Allow auth routes.
+
+Redirect attempts to protected customer routes to Login.
+
+AUTHENTICATED ACTIVE:
+
+Allow customer application routes.
+
+If the user is currently on Login or OTP after successful authentication, redirect to the authenticated application.
+
+AUTHENTICATED BLOCKED:
+
+Allow only the blocked account route and approved limited support behaviour.
+
+Prevent navigation to Home, Cart, Checkout, and other commerce routes.
+
+AUTHENTICATED PROFILE ERROR:
+
+Show a recoverable profile initialization error screen.
+
+Do not redirect infinitely between Login and Home.
+
+Use Expo Router route groups correctly.
+
+Do not create route protection separately in every screen.
+
+Do not create giant useEffect navigation logic in every page.
+
+PHASE 16 — AUTH ROUTE HISTORY SECURITY
+
+After successful OTP verification:
+
+The user must not return to the OTP screen using the Android Back button.
+
+Use replace-style navigation when entering the authenticated app.
+
+After logout:
+
+The user must not return to authenticated screens using Back.
+
+After blocked-state routing:
+
+The user must not use Back navigation to access previously rendered commerce screens.
+
+Use correct Expo Router navigation semantics.
+
+Do not attempt to solve this by disabling the Android Back button globally.
+
+PHASE 17 — OTP RESEND
+
+Implement real OTP resend.
+
+Use the real Supabase OTP request API.
+
+RESEND RULES:
+
+* Resend disabled during cooldown.
+* Show countdown.
+* Countdown is UI state, not a security boundary.
+* Supabase server rate limiting remains authoritative.
+* Do not automatically resend.
+* Do not resend when the screen opens.
+* User must explicitly tap Resend.
+* Disable repeated taps while the resend request is pending.
+
+On successful resend:
+
+Reset the local cooldown.
+
+Clear the previous OTP input.
+
+Focus the OTP input.
+
+Show a subtle success message.
+
+On rate limit:
+
+Show a retry-later message.
+
+Do not fake resend success.
+
+PHASE 18 — CHANGE PHONE NUMBER
+
+Implement Change Phone Number behaviour from the OTP screen.
+
+When pressed:
+
+Return to Login.
+
+Preserve or prefill the previous phone number if the approved UX supports it.
+
+Clear OTP state.
+
+Do not sign out a different authenticated session accidentally.
+
+Do not keep OTP in route state.
+
+PHASE 19 — LOGOUT
+
+Implement real Supabase logout.
+
+Use:
+
+supabase.auth.signOut()
+
+or the compatible installed API.
+
+LOGOUT FLOW:
+
+1. User taps Logout.
+2. Show confirmation if approved by the UI architecture.
+3. Disable repeated logout actions.
+4. Call Supabase Auth signOut.
+5. Auth listener receives SIGNED_OUT.
+6. Clear authenticated profile state.
+7. Clear user-scoped TanStack Query cache.
+8. Clear sensitive user-specific in-memory state.
+9. Clear user-specific Zustand state if any exists.
+10. Route protection resolves to Login.
+
+IMPORTANT:
+
+Do not clear all AsyncStorage blindly.
+
+Supabase owns its session persistence keys.
+
+Use Supabase signOut for session removal.
+
+Do not leave User A's cached:
+
+orders
+
+addresses
+
+cart
+
+notifications
+
+profile
+
+visible when User B signs in on the same device.
+
+Create a centralized user-scoped cache clearing strategy.
+
+PHASE 20 — PROFILE SCREEN REAL AUTH DATA FOUNDATION
+
+Connect the Profile screen header to real authenticated auth/profile state.
+
+Display real available values:
+
+full_name
+
+phone
+
+email
+
+Do not use:
+
+John Doe
+
+Demo User
+
+[test@example.com](mailto:test@example.com)
+
+fake phone numbers
+
+If full_name is empty:
+
+Use a neutral incomplete-profile presentation such as:
+
+Complete your profile
+
+Do not invent a name.
+
+The profile screen menu actions may remain visual foundations for future feature steps.
+
+Logout must work in this step.
+
+PHASE 21 — ACCOUNT DELETION BOUNDARY
+
+Do not implement insecure account deletion directly from the client.
+
+Inspect the existing PRD and security architecture.
+
+The Delete Account UI already exists or is planned.
+
+For this step:
+
+* Keep the Delete Account action visible if required by product scope.
+* Do not call DELETE on profiles.
+* Do not attempt to delete auth.users from the public client.
+* Do not expose service_role.
+* Do not fake deletion.
+
+Create a clearly typed account deletion service boundary or TODO linked to a future secure server-side account deletion implementation.
+
+When the user taps Delete Account before the secure workflow exists:
+
+Show a clear non-deceptive unavailable-state message appropriate for development.
+
+Do not say the account was deleted.
+
+Document the missing secure backend requirement.
+
+PHASE 22 — AUTH ERROR MAPPING
+
+Create centralized user-facing auth error mapping.
+
+Map known classes of errors:
+
+Invalid phone number.
+
+OTP rate limit.
+
+SMS send failure.
+
+Invalid OTP.
+
+Expired OTP.
+
+Network unavailable.
+
+Session expired.
+
+Refresh token failure.
+
+Profile unavailable.
+
+Blocked account.
+
+Unknown authentication error.
+
+Do not rely only on exact English error string matching if Supabase exposes structured error codes.
+
+Use structured codes/status where available.
+
+Fallback to safe normalized message mapping.
+
+Never show:
+
+JWT details.
+
+SQL errors.
+
+Supabase project identifiers.
+
+Database table names.
+
+Stack traces.
+
+PHASE 23 — SESSION EXPIRATION BEHAVIOUR
+
+Implement session expiration handling.
+
+If the session becomes invalid and refresh cannot recover:
+
+Transition to unauthenticated state.
+
+Clear profile state.
+
+Clear user-scoped query cache.
+
+Clear sensitive user state.
+
+Route to Login.
+
+Show a user-friendly session expired message where practical.
+
+Do not leave the app in an infinite loading state.
+
+Do not keep stale authenticated UI accessible.
+
+PHASE 24 — TANSTACK QUERY AUTH INTEGRATION
+
+Review all current mobile queries.
+
+Queries requiring authentication must not execute before the authenticated active state is ready.
+
+Use enabled conditions appropriately.
+
+Do not send requests with an undefined user identity.
+
+Do not manually attach a fake user id.
+
+Supabase client session handles authenticated requests.
+
+On logout:
+
+Remove user-scoped queries.
+
+On user change:
+
+Do not reuse User A's cache for User B.
+
+Design stable query keys.
+
+Document the query cache ownership strategy.
+
+PHASE 25 — AUTH SECURITY AUDIT
+
+Search the complete mobile runtime code for:
+
+service_role
+
+SUPABASE_ACCESS_TOKEN
+
+SUPABASE_DB_PASSWORD
+
+secret key
+
+hardcoded JWT
+
+hardcoded access token
+
+hardcoded refresh token
+
+hardcoded user UUID
+
+hardcoded OTP
+
+123456
+
+000000
+
+fake session
+
+mock auth
+
+demo login
+
+isLoggedIn = true
+
+manual auth bypass
+
+localStorage auth
+
+unprotected user_id input
+
+Remove unsafe runtime authentication behaviour.
+
+Do not remove legitimate SQL verification references or documentation examples solely because a search term exists.
+
+Audit actual runtime exposure.
+
+PHASE 26 — AUTH TESTING
+
+Test the real authentication flow against the linked Supabase project.
+
+IMPORTANT:
+
+Do not claim SMS OTP end-to-end passed unless the Supabase Phone Auth provider and SMS provider are actually configured and a real OTP request succeeds.
+
+Test:
+
+Cold app start with no session.
+
+Login screen shown.
+
+Invalid phone rejected locally.
+
+Valid phone normalized correctly.
+
+Continue button pending state.
+
+Repeated Continue tap prevented.
+
+Real OTP request attempt.
+
+OTP route only opens after accepted request.
+
+Invalid OTP format rejected locally.
+
+Repeated Verify tap prevented.
+
+Real OTP verification attempt where provider configuration allows.
+
+OTP resend cooldown.
+
+Repeated resend prevented.
+
+Change phone number.
+
+Existing session restoration.
+
+No Login flash during session restoration.
+
+Logout.
+
+Back button after logout.
+
+User-scoped cache clearing.
+
+Profile loading.
+
+Blocked profile routing where a safe test account/context exists.
+
+Session expiration handling architecture.
+
+App restart.
+
+If real SMS provider configuration blocks testing:
+
+Report:
+
+PHONE AUTH PROVIDER CONFIGURATION REQUIRED
+
+Do not insert a fake OTP workaround.
+
+Do not enable a development bypass.
+
+PHASE 27 — SUPABASE DASHBOARD CONFIGURATION CHECK
+
+Determine whether real phone authentication is configured in the linked Supabase project.
+
+Do not expose secrets.
+
+Check or document the required dashboard configuration.
+
+Create:
+
+docs/PHONE_AUTH_SETUP.md
+
+Document the exact human actions required for the current Supabase project.
+
+Include:
+
+Supabase Dashboard navigation.
+
+Authentication provider configuration.
+
+Phone provider enablement.
+
+SMS provider requirement.
+
+Supported provider configuration based on current Supabase capabilities.
+
+OTP expiry considerations.
+
+Rate limit considerations.
+
+Production SMS considerations.
+
+India phone number testing considerations.
+
+Do not include real SMS provider credentials.
+
+Do not invent configured provider status if CLI/API access cannot verify it.
+
+Clearly distinguish:
+
+VERIFIED
+
+NOT VERIFIED
+
+HUMAN CONFIGURATION REQUIRED
+
+PHASE 28 — UPDATE DOCUMENTATION
+
+Complete:
+
+docs/AUTH_ARCHITECTURE.md
+
+Create or update:
+
+docs/PHONE_AUTH_SETUP.md
+
+Update:
+
+docs/MOBILE_ROUTE_MAP.md
+
+Document:
+
+Auth states.
+
+Session persistence.
+
+Session restoration.
+
+Auth listener.
+
+Profile loading.
+
+Blocked account state.
+
+Protected routes.
+
+OTP request.
+
+OTP verification.
+
+OTP resend.
+
+Logout.
+
+Cache clearing.
+
+Session expiration.
+
+Account deletion boundary.
+
+PHASE 29 — FINAL CODE QUALITY REVIEW
+
+Review:
+
+Auth provider size.
+
+Auth service architecture.
+
+Duplicate auth calls.
+
+Duplicate auth listeners.
+
+Navigation loops.
+
+Unsafe useEffect dependencies.
+
+Stale session closures.
+
+Memory leaks.
+
+AppState listener cleanup.
+
+Auth subscription cleanup.
+
+TypeScript errors.
+
+Any usage.
+
+Raw auth errors in UI.
+
+Hardcoded fake auth data.
+
+Sensitive logging.
+
+Fix issues found.
+
+PHASE 30 — FINAL REPORT
+
+Provide the following exact sections:
+
+SUPABASE AUTH CLIENT STATUS
+
+PHONE NORMALIZATION STATUS
+
+OTP REQUEST STATUS
+
+OTP VERIFICATION STATUS
+
+OTP RESEND STATUS
+
+SESSION PERSISTENCE STATUS
+
+SESSION RESTORATION STATUS
+
+AUTH STATE PROVIDER STATUS
+
+PROFILE LOADING STATUS
+
+BLOCKED CUSTOMER STATUS
+
+PROTECTED ROUTES STATUS
+
+AUTH ROUTE HISTORY STATUS
+
+LOGOUT STATUS
+
+USER CACHE CLEARING STATUS
+
+PROFILE REAL DATA STATUS
+
+ACCOUNT DELETION BOUNDARY STATUS
+
+AUTH ERROR MAPPING STATUS
+
+SESSION EXPIRATION STATUS
+
+PHONE AUTH DASHBOARD CONFIGURATION STATUS
+
+REAL OTP TEST STATUS
+
+AUTH SECURITY AUDIT STATUS
+
+FILES CREATED OR MODIFIED
+
+KNOWN LIMITATIONS
+
+HUMAN ACTIONS REQUIRED
+
+FINAL RESULT
+
+FINAL RESULT must be exactly one of:
+
+STEP 5 AUTH FOUNDATION COMPLETE
+
+STEP 5 AUTH FOUNDATION PARTIALLY COMPLETE
+
+STEP 5 AUTH FOUNDATION NOT COMPLETE
+
+IMPORTANT:
+
+If the code implementation is complete but a real SMS provider is not configured, use:
+
+STEP 5 AUTH FOUNDATION PARTIALLY COMPLETE
+
+Do not call fake OTP testing complete.
+
+Stop after authentication implementation and verification.
+
+Do not implement product database integration.
+
+Do not implement cart backend integration.
+
+Do not implement checkout order creation.
+
+Do not implement the Admin Panel.
+
+Do not continue to the next roadmap step automatically.
