@@ -1,0 +1,1300 @@
+You are a senior PostgreSQL Database Architect, Supabase Backend Engineer, Security Engineer, and E-commerce Systems Architect.
+
+Continue the existing pharmacy application project.
+
+STEP 1 has already created the following documentation:
+
+* docs/PRD.md
+* docs/FEATURE_BEHAVIOUR.md
+* docs/USER_FLOWS.md
+* docs/ADMIN_FLOWS.md
+* docs/EDGE_CASES.md
+
+Your task is STEP 2:
+
+DESIGN AND IMPLEMENT THE COMPLETE PRODUCTION-ORIENTED SUPABASE DATABASE ARCHITECTURE.
+
+IMPORTANT:
+
+Before making any database changes, read ALL five existing documentation files completely.
+
+The database architecture must follow the approved product requirements and feature behaviour.
+
+If a minor contradiction exists between documentation files:
+
+1. Prefer the safest behaviour.
+2. Prefer server-authoritative data.
+3. Prefer strict data ownership.
+4. Document the decision.
+5. Do not silently invent a major new feature.
+
+CURRENT PRODUCT EXCLUSIONS:
+
+* Do NOT implement prescription upload.
+* Do NOT implement prescription verification.
+* Do NOT implement prescription management.
+* Do NOT implement Billing/POS.
+* Do NOT implement a manual billing system.
+* Do NOT create prescription tables.
+* Do NOT create POS tables.
+
+CORE DATABASE RULES:
+
+* Use the real Supabase PostgreSQL database.
+* Do NOT use mock data.
+* Do NOT use demo data.
+* Do NOT create fake customers.
+* Do NOT create fake medicines.
+* Do NOT create fake orders.
+* Do NOT hardcode runtime business data.
+* Do NOT use local JSON as a database.
+* Do NOT create an in-memory database.
+* Do NOT create fake API responses.
+* All user-owned records must be connected to the authenticated Supabase user.
+* Customer A must never access Customer B's private data.
+* Historical order information must remain stable after medicine information changes.
+* Inventory changes must be traceable.
+* Important database changes must be auditable.
+* Use UUID primary keys unless a strong technical reason requires another type.
+* Use timestamptz for timestamps.
+* Store all money values as integer paise.
+* Never use floating point numbers for monetary values.
+* Use snake_case naming consistently.
+* Use created_at and updated_at consistently where applicable.
+* Use database constraints instead of relying only on frontend validation.
+* Use foreign keys with intentional ON DELETE behaviour.
+* Avoid unsafe cascading deletion of historical business records.
+
+TASK 1 — INSPECT THE EXISTING PROJECT
+
+Before implementation:
+
+1. Inspect the entire project structure.
+2. Identify any existing Supabase setup.
+3. Identify any existing SQL migrations.
+4. Identify any existing database types.
+5. Identify any mock database or local data systems.
+6. Identify environment variable handling.
+7. Identify whether the project is a monorepo or a single application.
+
+Do not delete application code in this step.
+
+Create:
+
+docs/DATABASE_ARCHITECTURE.md
+
+Document:
+
+* Existing database state
+* Existing Supabase integration
+* Migration strategy
+* Final database architecture
+* Data ownership strategy
+* Historical data strategy
+* Inventory strategy
+* Order snapshot strategy
+* Audit strategy
+
+TASK 2 — CREATE SUPABASE MIGRATION STRUCTURE
+
+Use a proper migration-based workflow.
+
+If a Supabase migration directory already exists, follow the existing structure.
+
+Otherwise create:
+
+supabase/
+migrations/
+
+Create ordered SQL migration files.
+
+Do NOT create one giant unstructured SQL file.
+
+Use logical migrations such as:
+
+001_extensions_and_types.sql
+002_profiles_and_admin.sql
+003_catalog.sql
+004_inventory.sql
+005_cart.sql
+006_addresses.sql
+007_coupons.sql
+008_orders.sql
+009_notifications.sql
+010_content_and_settings.sql
+011_audit_logs.sql
+012_indexes.sql
+013_updated_at_triggers.sql
+
+If RLS policies are separated into STEP 3, do not mix incomplete or insecure policies into this step.
+
+However, clearly document that client access must not be enabled until RLS is implemented.
+
+Migration files must be deterministic and safe to run on a fresh Supabase PostgreSQL database.
+
+TASK 3 — DATABASE ENUMS AND DOMAIN TYPES
+
+Create appropriate PostgreSQL enum types where strict states are required.
+
+At minimum evaluate and implement types for:
+
+user_status
+
+admin_status
+
+address_type
+
+inventory_transaction_type
+
+order_status
+
+payment_method
+
+payment_status
+
+discount_type
+
+notification_type
+
+notification_target_type
+
+admin_activity_action
+
+Order status must support:
+
+pending
+confirmed
+processing
+packed
+shipped
+out_for_delivery
+delivered
+cancelled
+
+Payment method current version:
+
+cash_on_delivery
+
+Architecture may support future payment methods, but do not implement payment gateway logic.
+
+Current payment status should support appropriate states such as:
+
+pending
+paid
+failed
+refunded
+cancelled
+
+Do not overuse enums for data that should remain configurable.
+
+TASK 4 — PROFILES TABLE
+
+Create a profiles table connected to auth.users.
+
+Required concepts:
+
+id
+
+The profile id must match auth.users.id.
+
+full_name
+
+phone
+
+email
+
+avatar_url
+
+status
+
+created_at
+
+updated_at
+
+Requirements:
+
+* id references auth.users(id)
+* one profile per authenticated user
+* phone normalization strategy must be documented
+* email normalization strategy must be documented
+* status supports active and blocked states
+* blocked customer behaviour must be supported
+* profile deletion strategy must be documented
+* do not store passwords
+* do not duplicate authentication secrets
+
+Create a database function and trigger to create the minimum profile record after a new auth user is created.
+
+The trigger must be safe.
+
+Do not trust arbitrary auth metadata for privileged fields.
+
+Never allow auth metadata to assign an admin role.
+
+TASK 5 — ADMIN USERS AND ROLE ARCHITECTURE
+
+Create a secure admin architecture.
+
+Required tables:
+
+admin_users
+
+admin_roles
+
+admin_permissions
+
+admin_role_permissions
+
+admin_user_roles
+
+Admin users must still be linked to auth.users.
+
+Do not create a separate password system.
+
+admin_users concepts:
+
+id
+
+user_id
+
+status
+
+created_at
+
+updated_at
+
+admin_roles concepts:
+
+id
+
+name
+
+description
+
+is_system_role
+
+created_at
+
+updated_at
+
+admin_permissions concepts:
+
+id
+
+permission_key
+
+description
+
+created_at
+
+Required permission architecture must support permissions such as:
+
+dashboard.view
+
+products.view
+products.create
+products.update
+products.archive
+
+categories.view
+categories.manage
+
+brands.view
+brands.manage
+
+manufacturers.view
+manufacturers.manage
+
+inventory.view
+inventory.adjust
+
+orders.view
+orders.update_status
+orders.cancel
+
+customers.view
+customers.block
+
+banners.view
+banners.manage
+
+coupons.view
+coupons.manage
+
+notifications.view
+notifications.send
+
+settings.view
+settings.update
+
+admins.view
+admins.manage
+
+roles.view
+roles.manage
+
+audit_logs.view
+
+Do not hardcode authorization only in frontend route checks.
+
+Database architecture must support server-side permission validation later.
+
+TASK 6 — CATALOG ARCHITECTURE
+
+Create tables:
+
+categories
+
+brands
+
+manufacturers
+
+products
+
+product_images
+
+product_compositions
+
+CATEGORY REQUIREMENTS:
+
+id
+name
+slug
+description
+image_url
+display_order
+is_active
+created_at
+updated_at
+
+Category slug must be unique.
+
+Category deletion must not accidentally delete historical order information.
+
+BRAND REQUIREMENTS:
+
+id
+name
+slug
+logo_url
+description
+is_active
+created_at
+updated_at
+
+MANUFACTURER REQUIREMENTS:
+
+id
+name
+slug
+description
+is_active
+created_at
+updated_at
+
+PRODUCT REQUIREMENTS:
+
+id
+
+name
+
+slug
+
+sku
+
+category_id
+
+brand_id
+
+manufacturer_id
+
+description
+
+uses
+
+pack_size
+
+mrp_paise
+
+selling_price_paise
+
+low_stock_threshold
+
+is_active
+
+is_featured
+
+is_best_seller
+
+created_at
+
+updated_at
+
+archived_at
+
+Rules:
+
+* slug unique
+* sku unique
+* mrp_paise must be greater than zero
+* selling_price_paise must be greater than zero
+* selling_price_paise must not exceed mrp_paise
+* low_stock_threshold must not be negative
+* archived products must remain available for historical order references
+* do not physically delete a product that has business history
+* define active vs archived behaviour
+
+PRODUCT IMAGES:
+
+id
+product_id
+image_url
+alt_text
+display_order
+is_primary
+created_at
+
+Rules:
+
+* support multiple images
+* define deterministic image order
+* architecture must support only one primary image per product
+* use a partial unique index if appropriate
+
+PRODUCT COMPOSITIONS:
+
+id
+product_id
+composition_name
+strength
+display_order
+created_at
+
+Support multiple compositions per product.
+
+TASK 7 — INVENTORY ARCHITECTURE
+
+Create:
+
+inventory
+
+inventory_transactions
+
+INVENTORY:
+
+product_id
+
+available_quantity
+
+reserved_quantity
+
+created_at
+
+updated_at
+
+Rules:
+
+* one inventory row per product
+* available_quantity cannot be negative
+* reserved_quantity cannot be negative
+* define whether available_quantity includes or excludes reservations
+* document the chosen model clearly
+* database constraints must prevent impossible values
+
+Use the following preferred model unless existing documentation requires otherwise:
+
+available_quantity = physical stock currently available for new orders
+
+reserved_quantity = quantity reserved by an active server workflow if reservation is introduced
+
+Current COD order creation should reduce available_quantity transactionally.
+
+Do not implement a long-lived cart reservation system.
+
+INVENTORY TRANSACTIONS:
+
+id
+
+product_id
+
+transaction_type
+
+quantity_change
+
+quantity_before
+
+quantity_after
+
+order_id if applicable
+
+admin_user_id if applicable
+
+reason
+
+metadata
+
+created_at
+
+Support transaction types for:
+
+initial_stock
+
+admin_addition
+
+admin_reduction
+
+admin_correction
+
+order_placement
+
+order_cancellation_restore
+
+return_restore for future compatibility if appropriate
+
+Rules:
+
+* every stock change must create an inventory transaction
+* manual admin adjustments require a reason
+* order placement transaction must reference the order when possible
+* cancellation restoration must reference the order
+* transaction history must be immutable from normal application workflows
+
+Be careful with circular foreign key dependencies between inventory_transactions and orders.
+
+Use an intentional migration strategy.
+
+TASK 8 — CART ARCHITECTURE
+
+Create:
+
+carts
+
+cart_items
+
+CARTS:
+
+id
+user_id
+created_at
+updated_at
+
+Rules:
+
+* one active cart per user for the current version
+* user_id references auth.users
+* enforce uniqueness appropriately
+
+CART ITEMS:
+
+id
+cart_id
+product_id
+quantity
+created_at
+updated_at
+
+Rules:
+
+* unique product per cart
+* quantity greater than zero
+* cart does not store authoritative final order pricing
+* product price must be refreshed from products
+* cart items may remain when a product becomes inactive, but the application must identify the item as unavailable
+* document this behaviour
+
+Do not calculate or persist an authoritative final payable amount in the cart.
+
+TASK 9 — ADDRESS ARCHITECTURE
+
+Create:
+
+user_addresses
+
+Required concepts:
+
+id
+user_id
+full_name
+phone
+address_line_1
+address_line_2
+landmark
+city
+state
+postal_code
+country_code
+address_type
+is_default
+created_at
+updated_at
+
+Rules:
+
+* addresses belong to authenticated users
+* phone normalization strategy
+* postal code validation should not be over-restricted at database level unless product scope is India-only
+* country_code should use a stable format
+* support Home, Work, Other
+* architecture must support one default address per user
+* use a partial unique index for one default address if appropriate
+* deleting an address must not delete historical order delivery information
+
+TASK 10 — COUPON ARCHITECTURE
+
+Create:
+
+coupons
+
+coupon_usage
+
+COUPONS:
+
+id
+code
+description
+discount_type
+discount_value
+minimum_order_paise
+maximum_discount_paise
+total_usage_limit
+per_user_usage_limit
+starts_at
+expires_at
+is_active
+created_at
+updated_at
+
+Rules:
+
+* coupon code must be unique using a normalized strategy
+* support percentage and fixed discounts
+* percentage values must have valid constraints
+* fixed discount values are stored in paise
+* minimum order cannot be negative
+* maximum discount behaviour must be clearly defined
+* starts_at must be before expires_at when both exist
+* usage limits must be positive when defined
+
+COUPON USAGE:
+
+id
+coupon_id
+user_id
+order_id
+used_at
+
+Rules:
+
+* usage must connect to a successfully created order
+* architecture must support per-user usage counting
+* prevent accidental duplicate usage for the same order
+* historical usage must remain available
+
+TASK 11 — ORDER ARCHITECTURE
+
+Create:
+
+orders
+
+order_items
+
+order_status_history
+
+payments
+
+ORDERS:
+
+id
+
+order_number
+
+user_id
+
+address_id nullable historical reference
+
+coupon_id nullable
+
+status
+
+payment_method
+
+payment_status
+
+subtotal_paise
+
+product_discount_paise
+
+coupon_discount_paise
+
+delivery_charge_paise
+
+total_paise
+
+customer_note
+
+idempotency_key
+
+created_at
+
+updated_at
+
+cancelled_at
+
+delivered_at
+
+Rules:
+
+* order_number must be unique
+* user_id must identify the order owner
+* idempotency_key must prevent duplicate order creation for the same user request
+* create an appropriate unique constraint using user_id and idempotency_key
+* all money values stored as integer paise
+* monetary values cannot be negative
+* total calculation consistency must be enforceable or validated by secure server logic
+* historical order records must not be deleted by normal customer actions
+
+ORDER ADDRESS SNAPSHOT:
+
+Historical delivery information must not depend only on user_addresses.
+
+Either:
+
+A. Create order_address_snapshots
+
+OR
+
+B. Store explicit immutable address snapshot columns on orders.
+
+Choose the cleaner normalized architecture.
+
+The snapshot must include:
+
+full_name
+phone
+address_line_1
+address_line_2
+landmark
+city
+state
+postal_code
+country_code
+address_type
+
+Document the choice.
+
+ORDER ITEMS:
+
+id
+
+order_id
+
+product_id nullable historical reference
+
+product_name_snapshot
+
+sku_snapshot
+
+image_url_snapshot
+
+pack_size_snapshot
+
+mrp_paise_snapshot
+
+selling_price_paise_snapshot
+
+quantity
+
+line_subtotal_paise
+
+line_discount_paise
+
+line_total_paise
+
+created_at
+
+Rules:
+
+* order items are historical snapshots
+* product updates must never modify order item snapshot values
+* quantity greater than zero
+* money values cannot be negative
+* product foreign key must tolerate product archival and historical retention strategy
+
+ORDER STATUS HISTORY:
+
+id
+order_id
+from_status
+to_status
+changed_by_user_id nullable
+changed_by_admin_user_id nullable
+reason
+created_at
+
+Rules:
+
+* every order status change must create history
+* initial pending state must be recorded
+* status history must not be casually editable
+* architecture must support identifying customer vs admin changes
+
+PAYMENTS:
+
+id
+order_id
+payment_method
+status
+amount_paise
+provider
+provider_payment_id
+provider_order_id
+metadata
+created_at
+updated_at
+
+Current version:
+
+* cash_on_delivery only
+* no Razorpay implementation
+* no fake payment success
+* architecture may support future gateway metadata
+
+TASK 12 — NOTIFICATION ARCHITECTURE
+
+Create:
+
+notifications
+
+user_notifications
+
+NOTIFICATIONS:
+
+id
+notification_type
+target_type
+title
+message
+metadata
+created_by_admin_user_id
+created_at
+
+USER NOTIFICATIONS:
+
+id
+notification_id
+user_id
+is_read
+read_at
+created_at
+
+Rules:
+
+* support order notifications
+* support admin broadcast notifications
+* support user-specific notifications
+* user read state must be user-specific
+* prevent duplicate notification delivery records where appropriate
+
+Do not implement push notification provider logic in this step.
+
+TASK 13 — BANNERS AND APP SETTINGS
+
+Create:
+
+banners
+
+app_settings
+
+BANNERS:
+
+id
+title
+image_url
+link_type
+link_value
+display_order
+starts_at
+ends_at
+is_active
+created_at
+updated_at
+
+Rules:
+
+* support product links
+* support category links
+* support no action
+* scheduling must be supported
+* start/end validation
+* inactive banners must be supported
+
+APP SETTINGS:
+
+Use a safe key-value configuration architecture.
+
+Required configuration concepts:
+
+delivery_charge_paise
+
+free_delivery_threshold_paise
+
+minimum_order_value_paise
+
+support_phone
+
+support_email
+
+support_whatsapp
+
+maintenance_mode
+
+minimum_supported_app_version
+
+latest_app_version
+
+force_update
+
+Do not hardcode these values in the mobile application.
+
+Use typed configuration metadata if necessary.
+
+Document how settings will be validated by secure server logic.
+
+TASK 14 — ADMIN ACTIVITY LOGS
+
+Create:
+
+admin_activity_logs
+
+Required concepts:
+
+id
+admin_user_id
+action
+entity_type
+entity_id
+description
+old_values
+new_values
+metadata
+created_at
+
+Rules:
+
+* use jsonb for structured before/after values
+* logs must be append-only in normal workflows
+* sensitive authentication secrets must never be logged
+* document actions that require audit logs
+
+Audit-required actions include:
+
+Product creation
+
+Product update
+
+Product archive
+
+Inventory adjustment
+
+Order status change
+
+Order cancellation
+
+Customer block
+
+Customer unblock
+
+Banner changes
+
+Coupon changes
+
+App settings changes
+
+Admin creation
+
+Role assignment
+
+Permission changes
+
+TASK 15 — UPDATED_AT TRIGGERS
+
+Create a reusable database function for updated_at.
+
+Apply it consistently to mutable tables.
+
+Do not manually repeat fragile trigger logic unnecessarily.
+
+TASK 16 — INDEX STRATEGY
+
+Create indexes intentionally.
+
+At minimum evaluate indexes for:
+
+products.name
+
+products.slug
+
+products.sku
+
+products.category_id
+
+products.brand_id
+
+products.manufacturer_id
+
+products.is_active
+
+products.is_featured
+
+products.is_best_seller
+
+categories.slug
+
+orders.user_id
+
+orders.order_number
+
+orders.status
+
+orders.created_at
+
+order_items.order_id
+
+cart_items.cart_id
+
+cart_items.product_id
+
+user_addresses.user_id
+
+inventory.available_quantity
+
+inventory_transactions.product_id
+
+inventory_transactions.created_at
+
+coupon_usage.coupon_id
+
+coupon_usage.user_id
+
+user_notifications.user_id
+
+user_notifications.is_read
+
+admin_activity_logs.admin_user_id
+
+admin_activity_logs.created_at
+
+For medicine search:
+
+Prepare PostgreSQL full-text search architecture.
+
+Search must support:
+
+product name
+
+brand name
+
+manufacturer name
+
+composition name
+
+Do not implement an external search engine.
+
+Create a documented strategy for search_vector or an equivalent PostgreSQL search architecture.
+
+If triggers or generated columns are used, ensure the strategy works with related brand, manufacturer, and composition data.
+
+Do not create a fragile generated column that illegally depends on subqueries.
+
+TASK 17 — DATABASE CONSTRAINT AUDIT
+
+After creating all tables, audit:
+
+Primary keys
+
+Foreign keys
+
+Unique constraints
+
+Check constraints
+
+Nullable columns
+
+Delete behaviour
+
+Update behaviour
+
+Money constraints
+
+Quantity constraints
+
+Date range constraints
+
+Status constraints
+
+Default values
+
+Historical record protection
+
+Document important decisions in:
+
+docs/DATABASE_ARCHITECTURE.md
+
+TASK 18 — GENERATE DATABASE TYPES
+
+If the existing project architecture supports generated Supabase TypeScript database types:
+
+Create or prepare the correct location for:
+
+types/database.types.ts
+
+Do not manually invent incomplete types if automatic generation is required.
+
+If Supabase CLI generation cannot run because the project is not linked:
+
+Create:
+
+docs/DATABASE_TYPES_GENERATION.md
+
+Document the exact generation workflow.
+
+Do not create fake generated types.
+
+TASK 19 — DATABASE VERIFICATION SQL
+
+Create:
+
+supabase/tests/database_verification.sql
+
+This file must contain safe verification queries or transactional test blocks for:
+
+Product selling price cannot exceed MRP
+
+Negative stock is rejected
+
+Negative cart quantity is rejected
+
+Duplicate product in one cart is rejected
+
+More than one default address per user is rejected
+
+Duplicate user idempotency key is rejected
+
+Invalid coupon date range is rejected
+
+Duplicate coupon usage for the same order is rejected
+
+More than one primary product image is rejected
+
+Order snapshot data is independent from product updates
+
+Do not insert permanent demo data.
+
+Use transactions and rollback for verification where possible.
+
+TASK 20 — SECURITY PREPARATION
+
+Create:
+
+docs/RLS_SECURITY_PLAN.md
+
+Do not implement incomplete RLS casually.
+
+Document the exact RLS policy plan for STEP 3.
+
+Cover every client-accessible table.
+
+For each table define:
+
+* RLS enabled requirement
+* Customer SELECT rule
+* Customer INSERT rule
+* Customer UPDATE rule
+* Customer DELETE rule
+* Admin rule
+* Super Admin rule
+* Whether direct client access should be completely denied
+* Whether access should only occur through secure RPC or Edge Function
+
+Pay special attention to:
+
+products
+
+inventory
+
+profiles
+
+user_addresses
+
+carts
+
+cart_items
+
+orders
+
+order_items
+
+order_status_history
+
+payments
+
+coupons
+
+coupon_usage
+
+notifications
+
+user_notifications
+
+admin_users
+
+admin_roles
+
+admin_permissions
+
+admin activity logs
+
+The security plan must explicitly state:
+
+The Supabase service role key must never be included in the customer mobile application or browser admin bundle.
+
+FINAL REVIEW
+
+After implementation:
+
+1. Read all migrations in order.
+2. Check for circular foreign key problems.
+3. Check migration execution order.
+4. Check duplicate enum creation.
+5. Check duplicate trigger names.
+6. Check invalid PostgreSQL syntax.
+7. Check Supabase compatibility.
+8. Check all money columns use integer paise.
+9. Check all user-owned data has a user ownership relationship.
+10. Check historical order snapshots.
+11. Check inventory traceability.
+12. Check idempotency architecture.
+13. Check admin permission architecture.
+14. Confirm prescription tables do not exist.
+15. Confirm Billing/POS tables do not exist.
+16. Confirm no mock or demo data was inserted.
+17. Update docs/DATABASE_ARCHITECTURE.md with final architecture.
+18. Provide a concise summary of created migrations and database architecture.
+19. List any actions that require a human to connect or configure the Supabase project.
+20. Stop and wait for the next instruction.
+
+DO NOT:
+
+* Build mobile UI.
+* Build admin UI.
+* Build authentication screens.
+* Implement order checkout UI.
+* Implement payment gateway integration.
+* Add prescription functionality.
+* Add Billing/POS.
+* Insert demo medicines.
+* Insert demo customers.
+* Insert demo orders.
+* Use mock data.
+
+This step is database architecture and schema implementation only.

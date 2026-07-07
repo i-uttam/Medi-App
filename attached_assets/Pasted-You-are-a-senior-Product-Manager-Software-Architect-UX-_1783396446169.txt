@@ -1,0 +1,989 @@
+You are a senior Product Manager, Software Architect, UX Strategist, and Pharmacy E-commerce Systems Expert.
+
+I want to build a production-ready online pharmacy mobile application inspired by the product experience and usability patterns of leading medicine delivery apps such as Truemeds and Netmeds.
+
+The product will consist of:
+
+1. Customer Mobile Application
+2. Responsive Web Admin Panel
+3. Shared Real Backend and PostgreSQL Database
+
+IMPORTANT PROJECT RULES:
+
+* Do NOT start coding the application yet.
+* Do NOT create UI screens yet.
+* Do NOT generate mock data.
+* Do NOT create demo users.
+* Do NOT create fake medicines.
+* Do NOT create fake orders.
+* Do NOT create placeholder APIs.
+* Do NOT create hardcoded business data.
+* Do NOT implement a prescription upload or prescription management system in the current version.
+* Do NOT implement Billing or POS functionality in the current version.
+* All future application features must use a real database.
+* The customer app and admin panel must use the same backend and database.
+* The architecture must be scalable, secure, modular, and production-oriented.
+* Do not blindly clone the UI, branding, assets, or copyrighted content of any existing pharmacy application.
+* Use existing pharmacy apps only as product-flow and UX inspiration.
+
+PLANNED TECHNOLOGY STACK:
+
+Customer Mobile Application:
+
+* React Native
+* Expo
+* TypeScript
+* Expo Router
+* TanStack Query
+* Zustand
+* React Hook Form
+* Zod
+
+Admin Panel:
+
+* Next.js
+* TypeScript
+* Tailwind CSS
+* shadcn/ui
+* TanStack Query
+* React Hook Form
+* Zod
+
+Backend:
+
+* Supabase
+* PostgreSQL
+* Supabase Authentication
+* Supabase Storage
+* Supabase Edge Functions where secure server-side logic is required
+
+TASK:
+
+Create the complete Product Requirements Document and detailed Feature Behaviour Specification for this pharmacy platform.
+
+Do not write implementation code.
+
+Create the following documentation files:
+
+docs/PRD.md
+
+docs/FEATURE_BEHAVIOUR.md
+
+docs/USER_FLOWS.md
+
+docs/ADMIN_FLOWS.md
+
+docs/EDGE_CASES.md
+
+PART 1 — PRODUCT REQUIREMENTS DOCUMENT
+
+Create docs/PRD.md.
+
+The document must clearly define:
+
+1. PRODUCT OVERVIEW
+
+Define:
+
+* Product purpose
+* Main customer problem
+* Product solution
+* Target users
+* Customer mobile app
+* Admin panel
+* Shared backend architecture
+
+2. PRODUCT SCOPE
+
+Clearly separate:
+
+Current Version Scope
+
+Future Version Scope
+
+Explicitly exclude from the current version:
+
+* Prescription upload
+* Prescription verification
+* Prescription management
+* Billing system
+* POS system
+
+Do not accidentally include these features in any current user flow.
+
+3. USER ROLES
+
+Define exact responsibilities and permissions for:
+
+Customer
+
+Admin
+
+Super Admin
+
+Clearly explain what each role can:
+
+* View
+* Create
+* Update
+* Delete
+* Manage
+
+4. CUSTOMER APPLICATION MODULES
+
+Document the complete requirements for:
+
+Splash and App Initialization
+
+Authentication
+
+Home
+
+Search
+
+Categories
+
+Medicine Listing
+
+Medicine Details
+
+Cart
+
+Saved Addresses
+
+Checkout
+
+Coupons
+
+Cash on Delivery
+
+Orders
+
+Order Tracking
+
+Order Cancellation
+
+Reorder
+
+Profile
+
+Notifications
+
+Help and Support
+
+App Settings
+
+Account Deletion
+
+For every module define:
+
+Purpose
+
+User actions
+
+System behaviour
+
+Required data
+
+Loading state
+
+Empty state
+
+Error state
+
+Success state
+
+Validation rules
+
+Security requirements
+
+Database interaction
+
+Admin dependencies
+
+5. ADMIN PANEL MODULES
+
+Document complete requirements for:
+
+Admin Authentication
+
+Dashboard
+
+Medicine Management
+
+Category Management
+
+Brand Management
+
+Manufacturer Management
+
+Inventory Management
+
+Order Management
+
+Customer Management
+
+Banner Management
+
+Coupon Management
+
+Notification Management
+
+App Configuration
+
+Admin User Management
+
+Role Management
+
+Admin Activity Logs
+
+For every admin module define:
+
+Purpose
+
+Admin actions
+
+System behaviour
+
+Validation
+
+Database interaction
+
+Permission requirements
+
+Loading states
+
+Empty states
+
+Error states
+
+Success feedback
+
+6. ORDER STATUS SYSTEM
+
+Define the official order statuses:
+
+pending
+
+confirmed
+
+processing
+
+packed
+
+shipped
+
+out_for_delivery
+
+delivered
+
+cancelled
+
+Create an allowed status transition matrix.
+
+Define exactly which status can transition to another status.
+
+Invalid status transitions must be rejected.
+
+Define customer cancellation rules.
+
+Define admin cancellation rules.
+
+Define delivered order behaviour.
+
+7. INVENTORY BUSINESS RULES
+
+Define:
+
+Available stock behaviour
+
+Low stock behaviour
+
+Out-of-stock behaviour
+
+Quantity validation
+
+Cart stock validation
+
+Checkout stock validation
+
+Inventory reduction
+
+Inventory restoration after cancellation
+
+Inventory transaction history
+
+Manual admin inventory adjustment
+
+Inventory adjustment reason requirement
+
+Preventing negative stock
+
+Concurrent checkout behaviour
+
+8. PRICING BUSINESS RULES
+
+Define:
+
+MRP
+
+Selling price
+
+Discount calculation
+
+Coupon discount
+
+Delivery charge
+
+Free delivery threshold
+
+Minimum order value
+
+Final payable amount
+
+Price rounding
+
+Price changes while products are inside the cart
+
+Price changes during checkout
+
+Historical order pricing
+
+Clearly state that the client application must never be trusted to calculate the final authoritative order total.
+
+9. ORDER CREATION RULES
+
+Define the complete Place Order behaviour.
+
+The backend must:
+
+Validate authenticated user
+
+Validate address ownership
+
+Fetch active cart
+
+Fetch latest product information
+
+Validate product availability
+
+Validate stock
+
+Validate current price
+
+Validate coupon
+
+Calculate discounts
+
+Calculate delivery charges
+
+Calculate final total
+
+Create order
+
+Create order item snapshots
+
+Reduce inventory
+
+Create inventory transactions
+
+Create order status history
+
+Record coupon usage when applicable
+
+Clear the cart
+
+Return the created order
+
+Define transactional behaviour.
+
+If any critical operation fails, the entire order operation must roll back.
+
+Define duplicate Place Order prevention and idempotency requirements.
+
+10. DATA OWNERSHIP RULES
+
+Define:
+
+Customer profile ownership
+
+Address ownership
+
+Cart ownership
+
+Order ownership
+
+Notification ownership
+
+Admin access
+
+Super Admin access
+
+Explain that Customer A must never access Customer B's private data.
+
+11. NON-FUNCTIONAL REQUIREMENTS
+
+Define requirements for:
+
+Security
+
+Performance
+
+Scalability
+
+Maintainability
+
+Accessibility
+
+Reliability
+
+Error handling
+
+Logging
+
+Auditability
+
+Database integrity
+
+Mobile network failures
+
+Slow network conditions
+
+PART 2 — FEATURE BEHAVIOUR SPECIFICATION
+
+Create docs/FEATURE_BEHAVIOUR.md.
+
+Document exact behaviour for every interactive feature.
+
+Do not write vague statements such as:
+
+"The cart should work correctly."
+
+Instead define exact behaviour.
+
+Example format:
+
+FEATURE: ADD PRODUCT TO CART
+
+Trigger:
+User taps the Add button.
+
+Preconditions:
+User session state is known.
+Product is active.
+Product is available.
+
+System Behaviour:
+
+1. Validate product availability.
+2. Check current stock.
+3. Determine current cart.
+4. Add the product to the cart.
+5. Set quantity to 1 if the item does not exist.
+6. If the product already exists, follow the defined quantity update behaviour.
+7. Persist the cart state.
+8. Refresh the cart query.
+9. Update the product card UI.
+10. Update the cart badge.
+
+Loading Behaviour:
+Disable repeated Add actions while the mutation is pending.
+
+Success Behaviour:
+Replace Add button with quantity controls.
+
+Failure Behaviour:
+Restore the previous UI state.
+Display a human-readable error.
+
+Edge Cases:
+Product becomes inactive.
+Product becomes out of stock.
+Network disconnects.
+User taps Add repeatedly.
+Database operation fails.
+
+Use this detailed format for all important features.
+
+At minimum document exact behaviour for:
+
+App initialization
+
+Session restoration
+
+Phone login
+
+OTP request
+
+OTP verification
+
+New profile creation
+
+Existing user login
+
+Logout
+
+Account deletion
+
+Home data loading
+
+Banner interaction
+
+Category interaction
+
+Product list loading
+
+Pagination
+
+Search input
+
+Search debounce
+
+Search suggestions
+
+Recent searches
+
+Search history deletion
+
+Search filters
+
+Search sorting
+
+Product details loading
+
+Recently viewed products
+
+Add to cart
+
+Increase cart quantity
+
+Decrease cart quantity
+
+Remove cart item
+
+Cart persistence
+
+Cart price refresh
+
+Cart stock validation
+
+Cart unavailable product handling
+
+Add address
+
+Edit address
+
+Delete address
+
+Set default address
+
+Select checkout address
+
+Important address rule:
+
+Tapping the address card must only select or open the address details based on context.
+
+The address must NOT enter edit mode when the user taps the address card.
+
+Editing must only start when the user explicitly taps a dedicated Edit button or Edit icon.
+
+Coupon application
+
+Coupon removal
+
+Coupon validation
+
+Checkout initialization
+
+Checkout price refresh
+
+Place Order
+
+Duplicate Place Order prevention
+
+Order success handling
+
+Order list loading
+
+Order details loading
+
+Order timeline
+
+Customer order cancellation
+
+Reorder
+
+Profile loading
+
+Profile update
+
+Notification loading
+
+Notification read status
+
+Help and support actions
+
+Admin login
+
+Admin dashboard loading
+
+Admin product creation
+
+Admin product editing
+
+Admin product activation
+
+Admin product deactivation
+
+Admin product archive behaviour
+
+Admin category creation
+
+Admin category editing
+
+Admin inventory adjustment
+
+Admin low stock view
+
+Admin order list
+
+Admin order search
+
+Admin order filters
+
+Admin order details
+
+Admin order status update
+
+Invalid order status transition
+
+Admin order cancellation
+
+Admin customer view
+
+Admin customer block
+
+Admin customer unblock
+
+Banner creation
+
+Banner scheduling
+
+Banner activation
+
+Banner expiration
+
+Coupon creation
+
+Coupon editing
+
+Coupon activation
+
+Coupon expiration
+
+Notification creation
+
+Notification sending
+
+App settings update
+
+Admin role assignment
+
+Admin permission validation
+
+Admin activity logging
+
+PART 3 — USER FLOWS
+
+Create docs/USER_FLOWS.md.
+
+Document step-by-step user flows for:
+
+First app launch
+
+New user registration
+
+Existing user login
+
+Browse medicine
+
+Search medicine
+
+Browse by category
+
+View medicine details
+
+Add medicine to cart
+
+Modify cart
+
+Add first address
+
+Select existing address
+
+Apply coupon
+
+Checkout
+
+Cash on Delivery order
+
+Successful order
+
+Failed order creation
+
+Duplicate Place Order attempt
+
+View order history
+
+Track order
+
+Cancel eligible order
+
+Reorder
+
+Edit profile
+
+Manage addresses
+
+Read notifications
+
+Contact support
+
+Logout
+
+Delete account
+
+For every flow define:
+
+Entry point
+
+Steps
+
+Decision points
+
+Success destination
+
+Failure destination
+
+Recovery behaviour
+
+PART 4 — ADMIN FLOWS
+
+Create docs/ADMIN_FLOWS.md.
+
+Document step-by-step admin flows for:
+
+Admin login
+
+Dashboard review
+
+Create medicine
+
+Edit medicine
+
+Deactivate medicine
+
+Archive medicine
+
+Create category
+
+Edit category
+
+Create brand
+
+Create manufacturer
+
+Add inventory
+
+Reduce inventory
+
+Correct inventory
+
+Review inventory history
+
+Review low stock
+
+View new orders
+
+Search order
+
+Filter orders
+
+Open order details
+
+Confirm order
+
+Process order
+
+Pack order
+
+Ship order
+
+Mark out for delivery
+
+Mark delivered
+
+Cancel order
+
+View customer
+
+Block customer
+
+Unblock customer
+
+Create banner
+
+Schedule banner
+
+Create coupon
+
+Deactivate coupon
+
+Send notification
+
+Update application settings
+
+Create admin user
+
+Assign role
+
+Review admin activity logs
+
+For every admin flow define:
+
+Required permission
+
+Entry point
+
+Steps
+
+Validation
+
+Database effect
+
+Audit log requirement
+
+Success feedback
+
+Failure behaviour
+
+PART 5 — EDGE CASE DOCUMENT
+
+Create docs/EDGE_CASES.md.
+
+Create a detailed edge case matrix.
+
+At minimum cover:
+
+User loses internet during login.
+
+OTP expires.
+
+OTP is incorrect.
+
+User account is blocked.
+
+Session expires.
+
+Home API fails.
+
+Product is deleted while visible.
+
+Product becomes inactive while in cart.
+
+Product becomes out of stock while in cart.
+
+Stock becomes lower than cart quantity.
+
+Product price changes while in cart.
+
+Product price changes during checkout.
+
+Coupon expires while in cart.
+
+Coupon usage limit is reached.
+
+Coupon becomes inactive.
+
+Default address is deleted.
+
+Checkout address does not belong to the authenticated user.
+
+User double taps Place Order.
+
+Place Order request times out after the backend creates the order.
+
+Two users attempt to purchase the final stock unit.
+
+Inventory update fails.
+
+Order item creation fails.
+
+Cart clearing fails.
+
+Admin attempts an invalid order status transition.
+
+Admin changes stock while checkout is running.
+
+Customer attempts to cancel a shipped order.
+
+Cancelled order inventory restoration fails.
+
+Notification sending fails.
+
+Product image fails to load.
+
+Admin upload fails.
+
+Database request is slow.
+
+Mobile application is killed during checkout.
+
+Mobile application restarts after order creation.
+
+Customer logs into a new device.
+
+Customer logs out while a cart mutation is pending.
+
+For each edge case define:
+
+Scenario
+
+Risk
+
+Expected system behaviour
+
+User-facing behaviour
+
+Backend behaviour
+
+Recovery strategy
+
+Logging requirement
+
+FINAL DOCUMENTATION REQUIREMENTS:
+
+* Documentation must be specific and implementation-oriented.
+* Avoid generic product management language.
+* Define deterministic behaviour.
+* Use tables where comparison or transition rules are easier to understand.
+* Use stable feature names throughout every document.
+* Ensure PRD, feature behaviour, user flows, admin flows, and edge cases do not contradict each other.
+* Do not create application code.
+* Do not install dependencies.
+* Do not modify existing runtime application files.
+* Only create or update the requested documentation files.
+
+After completing the task:
+
+1. Review all five documents.
+2. Find contradictory requirements.
+3. Fix all contradictions.
+4. Confirm prescription functionality is excluded.
+5. Confirm Billing/POS functionality is excluded.
+6. Confirm no mock-data requirement has been introduced.
+7. Confirm all critical features have explicit loading, success, failure, and edge-case behaviour.
+8. Provide a concise summary of the documentation created.
+9. Stop and wait for the next instruction.
+
+Do not proceed to database implementation, UI implementation, or application coding.
