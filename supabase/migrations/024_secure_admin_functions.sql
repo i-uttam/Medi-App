@@ -273,7 +273,7 @@ RETURNS public.app_settings
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public
-AS $
+AS $$
 DECLARE
     v_admin_user_id UUID;
     v_setting       public.app_settings;

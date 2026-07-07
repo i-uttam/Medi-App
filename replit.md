@@ -14,10 +14,27 @@ A production-ready online pharmacy system: customers browse and order medicines 
 
 | Variable | Description |
 |----------|-------------|
-| `DATABASE_URL` | PostgreSQL connection string (Supabase or Replit Postgres) |
-| `SESSION_SECRET` | Secret for session signing (already configured in Replit Secrets) |
+| `DATABASE_URL` | PostgreSQL connection string — Replit's built-in PostgreSQL (auto-provisioned, runtime-managed) |
+| `SESSION_SECRET` | Secret for session signing (configured in Replit Secrets) |
 
-**Note:** `DATABASE_URL` is not yet configured. The API server will not start without it. Apply the migrations in `supabase/migrations/` after provisioning a database.
+## Running on Replit
+
+- **API Server** workflow: `PORT=8080 pnpm --filter @workspace/api-server run dev`
+- Health check: `GET /api/healthz` → `{"status":"ok"}`
+- The Replit built-in PostgreSQL is used. All 26 migrations in `supabase/migrations/` have been applied.
+
+### Database setup notes (Replit vs Supabase)
+
+The migrations were written for Supabase. To run on Replit's plain PostgreSQL the following compatibility stubs were applied once (not in any migration file):
+
+```sql
+CREATE SCHEMA IF NOT EXISTS auth;
+CREATE TABLE IF NOT EXISTS auth.users (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), phone TEXT, email TEXT, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
+CREATE OR REPLACE FUNCTION auth.uid() RETURNS UUID LANGUAGE sql STABLE AS $ SELECT NULL::UUID $;
+-- roles: CREATE ROLE authenticated; CREATE ROLE anon;
+```
+
+`auth.uid()` returns NULL — all RLS policies and SECURITY DEFINER RPCs that gate on auth are effectively disabled. The Express server handles authentication via sessions (`SESSION_SECRET`), so this is intentional for this deployment model. Do **not** promote these stubs to a real Supabase environment.
 
 ## Stack
 

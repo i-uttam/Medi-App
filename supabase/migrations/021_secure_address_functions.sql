@@ -25,9 +25,9 @@ CREATE OR REPLACE FUNCTION public.create_my_address(
     p_address_line_1 TEXT,
     p_address_line_2 TEXT        DEFAULT NULL,
     p_landmark       TEXT        DEFAULT NULL,
-    p_city           TEXT,
-    p_state          TEXT,
-    p_postal_code    TEXT,
+    p_city           TEXT        DEFAULT NULL,
+    p_state          TEXT        DEFAULT NULL,
+    p_postal_code    TEXT        DEFAULT NULL,
     p_country_code   TEXT        DEFAULT 'IN',
     p_address_type   address_type DEFAULT 'home'
 )
