@@ -1,3 +1,4 @@
 - [Online Pharmacy RLS Security Layer](pharmacy-rls-security.md) — migrations 014–025 implement full Supabase RLS + RBAC; key design decisions and bug patterns recorded.
 - [MediGo Mobile App Foundation](medigo-mobile-foundation.md) — Step 4 complete: design system, 25+ UI components, 19 screens, Zustand stores, React Hook Form + Zod forms.
 - [MediGo Auth Implementation](medigo-auth-implementation.md) — Step 5: Supabase phone OTP auth; key nav/typing/AppState decisions recorded.
+- [MediGo Catalog Step 6 Architecture](catalog-step6.md) — catalog service/hooks/query pattern; availability RPC, banner security, search, pagination decisions.

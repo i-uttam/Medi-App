@@ -116,11 +116,26 @@ Supabase phone auth provider and SMS provider (Twilio) must be configured in the
 
 ---
 
-## Step 6 — Customer Commerce Screens 🔲 NOT STARTED
+## Step 6 — Real Supabase Product Catalog Integration ✅ COMPLETE
 
-**Scope:** Home screen with real products, category browsing, product detail, add to cart, checkout, order placement, order tracking.
+**Completed:** 2026-07-07
 
-**Prerequisite:** Drizzle schema (`lib/db/src/schema/index.ts`) must be populated (Task #3) so API routes can return real data.
+**What was built:**
+- `artifacts/customer-app/features/catalog/` — catalog.types.ts, catalog.keys.ts, catalog.service.ts, catalog.hooks.ts
+- `artifacts/customer-app/hooks/` — useRecentSearches.ts, useRecentlyViewed.ts
+- `artifacts/customer-app/components/ui/BannerCarousel.tsx`
+- All screens connected to real Supabase data: Home, Categories, Category products, Product detail, Search
+
+**Key decisions:**
+- All catalog reads go through `catalog.service.ts` — screens never call Supabase directly.
+- Availability via `get_product_availability()` SECURITY DEFINER RPC — never queries `inventory_transactions`.
+- Full-text search via `products.search_vector` (websearch_to_tsquery, 400ms debounce).
+- Pagination: useInfiniteQuery + range-based offset (20/page) for category products and search.
+- Empty database → professional empty states, no fake content.
+- Cart mutations remain local Zustand only (backend is Step 7+).
+
+**Not in Step 6 (deferred to Step 7+):**
+- Cart backend mutations, checkout, order placement, admin panel, prescription, billing.
 
 ---
 

@@ -1,35 +1,79 @@
 /**
  * Home screen — main landing screen for MediGo.
  *
- * Structure:
+ * Sections (each loads independently — one section failing does not block others):
  *  - Delivery location header + notification bell
  *  - Search bar (tapping navigates to search)
- *  - Promotional banner area (skeleton while empty)
- *  - Shop by Category section
- *  - Featured Medicines section
- *  - Best Sellers section
+ *  - Promotional banners (hidden if none)
+ *  - Shop by Category (horizontal scroll)
+ *  - Featured Medicines (horizontal scroll, hidden if none)
+ *  - Best Sellers (horizontal scroll, hidden if none)
  *
- * Data: sections show skeleton loaders until real API queries are wired.
- * No fake data — skeletons represent the loading state.
+ * Data: real Supabase queries via catalog hooks.
+ * Empty database → professional empty state, no fake content.
  */
 
-import { CategoryCardSkeleton } from '@/components/ui/Skeleton';
-import { ProductCardSkeleton } from '@/components/ui/Skeleton';
-import { Skeleton } from '@/components/ui/Skeleton';
+import { BannerCarousel } from '@/components/ui/BannerCarousel';
+import { CategoryCardSkeleton, ProductCardSkeleton, Skeleton } from '@/components/ui/Skeleton';
 import { AppIconButton } from '@/components/ui/AppIconButton';
 import { AppSearchBar } from '@/components/ui/AppSearchBar';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { SectionHeader } from '@/components/ui/SectionHeader';
+import { ProductCard } from '@/components/cards/ProductCard';
+import { CategoryCard } from '@/components/cards/CategoryCard';
+import { Feather } from '@expo/vector-icons';
 import { FONT_FAMILY, FONT_SIZE, LAYOUT, RADIUS, SPACING } from '@/constants/theme';
+import { useActiveBanners, useBestSellerProducts, useCategories, useFeaturedProducts } from '@/features/catalog/catalog.hooks';
+import type { CatalogProductListItem } from '@/features/catalog/catalog.types';
 import { useColors } from '@/hooks/useColors';
 import { useCartStore } from '@/stores/cart';
-import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Platform, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-// Placeholder skeletons to show architecture while data is not yet connected
-const CATEGORY_SKELETONS = Array.from({ length: 6 }, (_, i) => i);
-const PRODUCT_SKELETONS = Array.from({ length: 4 }, (_, i) => i);
+/** Compact inline error for a home section — does not take over the whole screen. */
+function SectionError({ message, onRetry }: { message: string; onRetry: () => void }) {
+  const colors = useColors();
+  return (
+    <View style={sectionErrorStyles.row}>
+      <Feather name="alert-circle" size={14} color={colors.error} />
+      <Text style={[sectionErrorStyles.text, { color: colors.mutedForeground }]}>{message}</Text>
+      <Text
+        onPress={onRetry}
+        style={[sectionErrorStyles.retry, { color: colors.primary }]}
+        accessibilityRole="button"
+      >
+        Retry
+      </Text>
+    </View>
+  );
+}
+
+const sectionErrorStyles = StyleSheet.create({
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: SPACING.base,
+    paddingVertical: SPACING.sm,
+  },
+  text: { flex: 1, fontSize: FONT_SIZE.caption, fontFamily: FONT_FAMILY.regular },
+  retry: { fontSize: FONT_SIZE.caption, fontFamily: FONT_FAMILY.medium },
+});
+
+function toProductCardData(item: CatalogProductListItem) {
+  return {
+    id: item.id,
+    name: item.name,
+    manufacturer: item.manufacturerName ?? item.brandName ?? undefined,
+    packSize: item.packSize ?? undefined,
+    pricePaise: item.sellingPricePaise,
+    mrpPaise: item.mrpPaise !== item.sellingPricePaise ? item.mrpPaise : undefined,
+    imageUrl: item.primaryImageUrl ?? undefined,
+    inStock: item.inStock,
+    isFeatured: item.isFeatured,
+  };
+}
 
 export default function HomeScreen() {
   const colors = useColors();
@@ -40,25 +84,62 @@ export default function HomeScreen() {
   const topPad = Platform.OS === 'web' ? 67 : insets.top;
   const bottomPad = Platform.OS === 'web' ? 34 : insets.bottom;
 
+  // ── Real catalog queries (each independent) ─────────────────────────────────
+  const {
+    data: banners = [],
+    isLoading: bannersLoading,
+    isError: bannersError,
+    refetch: refetchBanners,
+  } = useActiveBanners();
+  const {
+    data: categories = [],
+    isLoading: categoriesLoading,
+    isError: categoriesError,
+    refetch: refetchCategories,
+  } = useCategories();
+  const {
+    data: featured = [],
+    isLoading: featuredLoading,
+    isError: featuredError,
+    refetch: refetchFeatured,
+  } = useFeaturedProducts();
+  const {
+    data: bestSellers = [],
+    isLoading: bestSellersLoading,
+    isError: bestSellersError,
+    refetch: refetchBestSellers,
+  } = useBestSellerProducts();
+
+  // Catalog is empty only when all sections loaded successfully with no data.
+  const allLoaded = !bannersLoading && !categoriesLoading && !featuredLoading && !bestSellersLoading;
+  const anyError = bannersError || categoriesError || featuredError || bestSellersError;
+  const catalogIsEmpty =
+    allLoaded &&
+    !anyError &&
+    banners.length === 0 &&
+    categories.length === 0 &&
+    featured.length === 0 &&
+    bestSellers.length === 0;
+
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
       {/* ── Sticky header ── */}
-      <View style={[styles.header, { paddingTop: topPad, backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+      <View
+        style={[
+          styles.header,
+          { paddingTop: topPad, backgroundColor: colors.surface, borderBottomColor: colors.border },
+        ]}
+      >
         {/* Delivery location row */}
         <View style={styles.locationRow}>
           <View style={styles.locationLeft}>
             <Text style={[styles.deliverTo, { color: colors.mutedForeground }]}>Deliver to</Text>
-            <Pressable
-              style={styles.locationSelector}
-              onPress={() => router.push('/addresses')}
-              accessibilityRole="button"
-              accessibilityLabel="Select delivery address"
+            <Text
+              style={[styles.locationText, { color: colors.foreground }]}
+              numberOfLines={1}
             >
-              <Text style={[styles.locationText, { color: colors.foreground }]} numberOfLines={1}>
-                Select delivery address
-              </Text>
-              <Feather name="chevron-down" size={16} color={colors.primary} />
-            </Pressable>
+              Select delivery address
+            </Text>
           </View>
           <AppIconButton
             onPress={() => router.push('/notifications')}
@@ -84,78 +165,120 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: bottomPad + LAYOUT.tabBarHeight + SPACING['2xl'] }}
       >
-
-        {/* Banner area — skeleton while banners load / are empty */}
-        <View style={styles.bannerSection}>
-          <Skeleton
-            height={160}
-            borderRadius={RADIUS.lg}
-            style={[styles.banner, { backgroundColor: colors.primarySoft }]}
+        {/* ── Catalog empty state ── */}
+        {catalogIsEmpty && (
+          <EmptyState
+            icon="package"
+            title="Catalogue coming soon"
+            description="Products and categories will appear here once the catalogue is set up."
+            style={{ marginTop: SPACING['3xl'] }}
           />
-          {/* Dot indicators */}
-          <View style={styles.dots}>
-            {[0, 1, 2].map((i) => (
-              <View
-                key={i}
-                style={[
-                  styles.dot,
-                  { backgroundColor: i === 0 ? colors.primary : colors.border },
-                ]}
+        )}
+
+        {/* ── Banner section ── */}
+        {(bannersLoading || banners.length > 0) && (
+          <View style={styles.bannerSection}>
+            {bannersLoading ? (
+              <Skeleton
+                height={160}
+                borderRadius={RADIUS.lg}
+                style={{ width: '100%', backgroundColor: colors.primarySoft }}
               />
-            ))}
+            ) : (
+              <BannerCarousel banners={banners} />
+            )}
           </View>
-        </View>
+        )}
 
-        {/* Shop by Category */}
-        <View style={styles.section}>
-          <SectionHeader
-            title="Shop by Category"
-            onSeeAll={() => router.push('/(tabs)/categories')}
-          />
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalList}
-          >
-            {CATEGORY_SKELETONS.map((i) => (
-              <CategoryCardSkeleton key={i} />
-            ))}
-          </ScrollView>
-        </View>
+        {/* ── Shop by Category ── */}
+        {(categoriesLoading || categoriesError || categories.length > 0) && (
+          <View style={styles.section}>
+            <SectionHeader
+              title="Shop by Category"
+              onSeeAll={() => router.push('/(tabs)/categories')}
+            />
+            {categoriesError ? (
+              <SectionError
+                message="Could not load categories."
+                onRetry={refetchCategories}
+              />
+            ) : (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.horizontalList}
+              >
+                {categoriesLoading
+                  ? Array.from({ length: 6 }, (_, i) => <CategoryCardSkeleton key={i} />)
+                  : categories.map((cat) => (
+                      <CategoryCard
+                        key={cat.id}
+                        category={{ id: cat.id, name: cat.name, imageUrl: cat.imageUrl ?? undefined }}
+                        onPress={() => router.push(`/category/${cat.id}`)}
+                      />
+                    ))}
+              </ScrollView>
+            )}
+          </View>
+        )}
 
-        {/* Featured Medicines */}
-        <View style={styles.section}>
-          <SectionHeader
-            title="Featured Medicines"
-            onSeeAll={() => router.push('/search')}
-          />
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalList}
-          >
-            {PRODUCT_SKELETONS.map((i) => (
-              <ProductCardSkeleton key={i} />
-            ))}
-          </ScrollView>
-        </View>
+        {/* ── Featured Medicines ── */}
+        {(featuredLoading || featuredError || featured.length > 0) && (
+          <View style={styles.section}>
+            <SectionHeader title="Featured Medicines" />
+            {featuredError ? (
+              <SectionError
+                message="Could not load featured medicines."
+                onRetry={refetchFeatured}
+              />
+            ) : (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.horizontalList}
+              >
+                {featuredLoading
+                  ? Array.from({ length: 4 }, (_, i) => <ProductCardSkeleton key={i} />)
+                  : featured.map((product) => (
+                      <ProductCard
+                        key={product.id}
+                        product={toProductCardData(product)}
+                        onPress={() => router.push(`/product/${product.id}`)}
+                      />
+                    ))}
+              </ScrollView>
+            )}
+          </View>
+        )}
 
-        {/* Best Sellers */}
-        <View style={styles.section}>
-          <SectionHeader
-            title="Best Sellers"
-            onSeeAll={() => router.push('/search')}
-          />
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.horizontalList}
-          >
-            {PRODUCT_SKELETONS.map((i) => (
-              <ProductCardSkeleton key={i} />
-            ))}
-          </ScrollView>
-        </View>
+        {/* ── Best Sellers ── */}
+        {(bestSellersLoading || bestSellersError || bestSellers.length > 0) && (
+          <View style={styles.section}>
+            <SectionHeader title="Best Sellers" />
+            {bestSellersError ? (
+              <SectionError
+                message="Could not load best sellers."
+                onRetry={refetchBestSellers}
+              />
+            ) : (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.horizontalList}
+              >
+                {bestSellersLoading
+                  ? Array.from({ length: 4 }, (_, i) => <ProductCardSkeleton key={i} />)
+                  : bestSellers.map((product) => (
+                      <ProductCard
+                        key={product.id}
+                        product={toProductCardData(product)}
+                        onPress={() => router.push(`/product/${product.id}`)}
+                      />
+                    ))}
+              </ScrollView>
+            )}
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -181,11 +304,6 @@ const styles = StyleSheet.create({
     fontFamily: FONT_FAMILY.regular,
     marginBottom: 2,
   },
-  locationSelector: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.xs,
-  },
   locationText: {
     fontSize: FONT_SIZE.body,
     fontFamily: FONT_FAMILY.semibold,
@@ -201,13 +319,6 @@ const styles = StyleSheet.create({
     marginBottom: SPACING.xs,
   },
   banner: { width: '100%' },
-  dots: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: SPACING.xs,
-    marginTop: SPACING.sm,
-  },
-  dot: { width: 6, height: 6, borderRadius: 3 },
   section: { marginTop: SPACING.xl },
   horizontalList: {
     paddingHorizontal: SPACING.base,
