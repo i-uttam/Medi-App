@@ -12,9 +12,9 @@
 
 **Status:** 25 local migration files confirmed in `supabase/migrations/`.
 
-## REMOTE MIGRATIONS NOT YET VERIFIED
+## REMOTE MIGRATIONS VERIFIED ✅
 
-**Status:** No Supabase project has been linked. Remote state is unknown. Required secrets have not been configured.
+**Status:** All 26 local migrations confirmed applied to remote project `zfcdqxmwpindhizptcgt` (Medi App, ap-south-1, PostgreSQL 17.6.1). RLS, RBAC, and function signatures verified. TypeScript types generated.
 
 ---
 
@@ -35,20 +35,21 @@
 
 | Item | Status | Detail |
 |---|---|---|
-| `SUPABASE_ACCESS_TOKEN` | ❌ NOT CONFIGURED | Required for non-interactive CLI auth |
-| `SUPABASE_DB_PASSWORD` | ❌ NOT CONFIGURED | Required for `db push` |
-| `SUPABASE_PROJECT_ID` | ❌ NOT CONFIGURED | Required for `supabase link` |
-| `SUPABASE_URL` | ❌ NOT CONFIGURED | Required for client applications |
-| `SUPABASE_ANON_KEY` | ❌ NOT CONFIGURED | Required for client applications |
-| Remote link state | ❌ NOT LINKED | `supabase link` has not been run |
+| `SUPABASE_ACCESS_TOKEN` | ✅ CONFIGURED | CLI auth working |
+| `SUPABASE_DB_PASSWORD` | ✅ CONFIGURED | Used for `db push` |
+| `SUPABASE_PROJECT_ID` | ✅ CONFIGURED | `zfcdqxmwpindhizptcgt` |
+| `SUPABASE_URL` | ⚠️ NOT YET SET | `https://zfcdqxmwpindhizptcgt.supabase.co` — add to Replit Secrets |
+| `SUPABASE_ANON_KEY` | ⚠️ NOT YET SET | Get from Supabase Dashboard → Settings → API → anon public key |
+| Remote link state | ✅ LINKED | `supabase link` completed; `.supabase/` state dir present |
 
-**Blocker:** All three CLI secrets must be added to Replit Secrets before any remote operation can proceed.
+**No blockers for migration operations.** App-level secrets (URL, anon key) still needed for client code.
 
 ---
 
-## 3. Local Migration Count
+## 3. Migration Count
 
-**Total:** 25 migrations
+**Total local:** 26 migrations (001–026)  
+**Total remote:** 26 migrations — all synced ✅
 
 ---
 
@@ -81,6 +82,7 @@
 | 023 | `023_secure_order_functions.sql` | STEP 3 | Coupon validation, order cancel/status RPCs, notification RPCs; defines `coupon_validation_result` composite type |
 | 024 | `024_secure_admin_functions.sql` | STEP 3 | Block/unblock customer, archive product, update app setting RPCs |
 | 025 | `025_security_privileges.sql` | STEP 3 | Final REVOKE/GRANT sweep; anon role policy |
+| 026 | `026_fix_admin_update_app_setting_signature.sql` | STEP 4 fix | Drops JSONB overload; re-creates admin_update_app_setting with correct TEXT parameter |
 
 ---
 
@@ -217,17 +219,22 @@ These bugs were found during static audit and corrected **before any migration w
 
 ## 14. Actual Verified Deployment Status
 
-| Layer | Status |
-|---|---|
-| Local migration files | ✅ 25 files present, valid, audited |
-| Supabase CLI initialized | ✅ config.toml created |
-| Supabase project linked | ❌ NOT LINKED — awaiting secrets |
-| Remote migration history | ❌ NOT CHECKED — awaiting link |
-| Remote schema verification | ❌ NOT EXECUTED |
-| RLS verification | ❌ NOT EXECUTED |
-| Security function verification | ❌ NOT EXECUTED |
-| Database tests | ❌ NOT EXECUTED |
-| TypeScript types generated | ❌ NOT EXECUTED |
+| Layer | Status | Detail |
+|---|---|---|
+| Local migration files | ✅ 26 files present, valid, audited | 001–026 |
+| Supabase CLI installed | ✅ v2.109.0 dev dependency | `pnpm add -D -w supabase` |
+| Supabase project linked | ✅ LINKED | `zfcdqxmwpindhizptcgt` (Medi App) |
+| Remote migration history | ✅ ALL 26 SYNCED | `supabase migration list` confirmed |
+| RLS enabled on all tables | ✅ VERIFIED | 28 tables — rowsecurity AND forcerowsecurity both TRUE |
+| RLS policies present | ✅ VERIFIED | All 28 tables have ≥1 policy |
+| SECURITY DEFINER search_path | ✅ VERIFIED | 0 functions missing search_path lock |
+| All application functions exist | ✅ VERIFIED | Full function list confirmed via information_schema |
+| Anon privilege scope | ✅ VERIFIED | Only `get_product_availability` executable by anon |
+| admin_update_app_setting fix | ✅ APPLIED (026) | Signature corrected: (TEXT, TEXT, TEXT) on remote |
+| Security verification SQL | ✅ EXECUTED | `security_verification.sql` run via `db query --linked` — 0 errors |
+| TypeScript types generated | ✅ GENERATED | `lib/database.types.ts` — 2031 lines |
+| Storage buckets | ⚠️ MANUAL STEP REQUIRED | Create in Supabase Dashboard (CLI cannot create without Docker) |
+| Super Admin bootstrap | ⚠️ MANUAL STEP REQUIRED | See `docs/SUPER_ADMIN_BOOTSTRAP.md` |
 
 ---
 
@@ -241,6 +248,10 @@ These bugs were found during static audit and corrected **before any migration w
 | 2026-07-07 | STEP 4 Phase 3 | Static SQL audit complete; 5 bugs found and fixed |
 | 2026-07-07 | STEP 4 Phase 3 (cont.) | 2 additional bugs found and fixed: JSONB/TEXT mismatch in 024 (bug #6); wrong column refs in security_audit.sql (bug #7) |
 | 2026-07-07 | STEP 4 Phase 3 (cont.) | Supabase CLI installed as workspace dev dependency (v2.109.0) |
-| 2026-07-07 | STEP 4 Phase 4 | Awaiting user to configure 3 required Replit Secrets |
+| 2026-07-07 | STEP 4 Phase 5 | Secrets added; CLI authenticated; project linked to zfcdqxmwpindhizptcgt |
+| 2026-07-07 | STEP 4 Phase 6 | Remote migration list inspected: all 25 prior migrations already applied |
+| 2026-07-07 | STEP 4 Phase 6 | Migration 026 created and pushed: fixes admin_update_app_setting JSONB→TEXT |
+| 2026-07-07 | STEP 4 Phase 7 | Security verification executed: RLS, FORCE RLS, SECURITY DEFINER, anon grants all pass |
+| 2026-07-07 | STEP 4 Phase 8 | TypeScript types generated: lib/database.types.ts (2031 lines) |
 
 *This document will be updated after each subsequent phase.*
