@@ -1,46 +1,67 @@
 ---
 name: Online Pharmacy RLS Security Layer
-description: Key decisions, gotchas, and bug patterns from implementing migrations 014–025 (RLS + RBAC + SECURITY DEFINER RPCs).
+description: Key design decisions, bug patterns, and deployment facts for the pharmacy platform's Supabase migration stack (migrations 001–026).
 ---
 
-## admin_activity_action enum values
-The `admin_activity_action` enum (migration 001) uses:
-- `app_settings_updated` (NOT `setting_updated` — that was a bug caught in review)
-- `inventory_adjusted`, `order_status_updated`, `order_cancelled`
-- `customer_blocked`, `customer_unblocked`, `product_archived`
-Always verify against migration 001 before writing new audit log inserts.
+## Migration Stack Overview
+- 26 migrations total: 001–013 schema, 014–025 security/RLS/RBAC, 026 fix
+- Remote project: `zfcdqxmwpindhizptcgt` (Medi App, ap-south-1, PostgreSQL 17.6.1)
+- All 26 migrations synced; verified via `supabase migration list`
 
-**Why:** Wrong enum value causes runtime exception; migrations 014–024 are already applied and cannot be changed without a new migration.
+## Column Type: app_settings.value is TEXT (not JSONB)
+**Rule:** `admin_update_app_setting` must accept `p_value TEXT`, not JSONB. The app_settings table stores values as plain text — callers must serialize numbers/booleans/JSON to string before calling.
 
-## from_status bug pattern in order status history
-After `UPDATE orders SET status = ... RETURNING * INTO v_order`, the variable `v_order.status` holds the NEW status. Code that reads `v_order.status` for `from_status` in `order_status_history` will record the wrong value.
+**Why:** Migration 024 originally shipped with `p_value JSONB` but `app_settings.value` is `TEXT`. PostgreSQL has no implicit/assignment cast from jsonb→text, so the INSERT would fail at runtime. Fixed in migration 026 (DROP JSONB overload, CREATE TEXT overload).
 
-**Fix:** Capture `v_prior_status := v_order.status` BEFORE the UPDATE, then use `v_prior_status` in the history insert.
+**How to apply:** If any future function upserts into `app_settings`, use TEXT for both the parameter and local variables. Never pass JSONB directly into a TEXT column.
 
-**How to apply:** Any future RPC that transitions an order status must capture the prior status before the UPDATE RETURNING statement.
+## SECURITY DEFINER Function Pattern
+All 9 security-helper functions (014) and all 14 RPC functions (019–024) use:
+```sql
+SECURITY DEFINER
+SET search_path = public
+```
+Missing `SET search_path` is a privilege-escalation risk. Verified on remote: 0 functions missing this lock.
 
-## First-address race condition pattern
-`EXISTS ... SELECT ... INSERT with is_default` is not atomic. Two concurrent first-address inserts for the same user can both evaluate EXISTS as FALSE and both try to insert with `is_default = TRUE`.
+## admin_users Table Has No Profile Columns
+`admin_users` only has: `id`, `user_id`, `status`, `created_at`, `updated_at`. Profile info (`full_name`, `email`) is on the `profiles` table joined via `profiles.id = admin_users.user_id`.
 
-**Fix:** Lock the user's `profiles` row (`PERFORM 1 FROM profiles WHERE id = auth.uid() FOR UPDATE`) before the EXISTS check. This serializes concurrent address operations per user.
+**Why this matters:** Any query joining admin_users for user display must also join `profiles`. The `security_audit.sql` AUDIT 10 had this bug (fixed).
 
-**How to apply:** Any RPC that conditionally sets `is_default` based on a prior-state read must hold a serializing lock. The profiles row lock is the preferred mechanism (avoids advisory locks).
+## RLS FORCE Column Name
+The correct pg_catalog column for FORCE ROW LEVEL SECURITY is `relforcerowsecurity` on `pg_class`, NOT a column called `forceroulsecurity` on `pg_tables` (which doesn't exist). Always use:
+```sql
+SELECT c.relname, c.relrowsecurity, c.relforcerowsecurity
+FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+WHERE n.nspname = 'public' AND c.relkind = 'r'
+```
 
-## SECURITY DEFINER + RLS interaction
-Functions marked SECURITY DEFINER bypass RLS on tables they query. This is intentional for helpers like `is_admin()` that must query `admin_users` without being subject to admin_users RLS (which would cause infinite recursion). All helpers pin `SET search_path = public` to prevent schema injection.
+## Supabase CLI Notes (v2.109.0)
+- `db execute` does not exist — use `db query --linked -f <file>` or `db query --linked "<sql>"`
+- `db query` with inline SQL containing `--` (SQL comments) causes argument parsing issues; prefer `-f <file>`
+- `db push` will prompt for confirmation; passes `--yes` flag to suppress
+- pgdelta catalog warning after push is non-critical (Docker cert issue in Replit env)
+- TypeScript types: `gen types typescript --project-id <ref>` — pipe stdout to file, stderr has npm warnings
 
-## Privilege model: SELECT grant required for RLS to apply
-Even with RLS enabled, a table needs a `GRANT SELECT TO authenticated` for PostgREST to allow authenticated users to issue SELECT. RLS then filters which rows they see. Migration 025 applies all grants; if a table is missing from 025's grant list, RLS policies on it are unreachable.
+## Privilege Sweep Pattern (migration 025 + 026)
+Every SECURITY DEFINER function needs:
+1. `REVOKE ALL ON FUNCTION ... FROM PUBLIC;` — revokes default public execute
+2. `GRANT EXECUTE ON FUNCTION ... TO authenticated;` — grants to logged-in users
+3. If anon should NOT call it: `REVOKE EXECUTE ... FROM anon;` (belt-and-suspenders)
+Only `get_product_availability` is granted to `anon`.
 
-## Migration dependency chain (014–025)
-014 helpers → 015 RLS enable → 016/017/018 policies → 019–024 RPCs → 025 privilege sweep.
-Applying out of order will fail: policies reference helper functions that must exist first.
+## Deferred FK Pattern
+`inventory_transactions.order_id` and `coupon_usage.order_id` have no FK in migrations 004/007 to avoid circular dependency. The FKs are added in migration 008 (`ALTER TABLE ... ADD CONSTRAINT ... FOREIGN KEY`). This is intentional — do not add them earlier.
 
-## Inventory deadlock prevention
-Cancel functions (both customer and admin) lock inventory rows in `ORDER BY product_id` (alphabetical UUID) to prevent ABBA deadlocks when multiple orders cancel concurrently and both need to restore stock for overlapping products.
+## Replit Secrets Configured
+- `SUPABASE_ACCESS_TOKEN`: CLI auth (personal access token)
+- `SUPABASE_PROJECT_ID`: `zfcdqxmwpindhizptcgt`
+- `SUPABASE_DB_PASSWORD`: DB password
+- `SUPABASE_URL`: `https://zfcdqxmwpindhizptcgt.supabase.co`
+- `SUPABASE_ANON_KEY`: project anon/public JWT key
 
-## Coupon security
-`coupons` table: no SELECT policy for `authenticated` or `anon`. Validation goes through `validate_my_coupon()` SECURITY DEFINER RPC which returns only eligibility info, not raw coupon rows. This prevents coupon code enumeration.
+## Storage Buckets (Manual)
+Required buckets (`product-images`, `category-images`, `brand-images`, `banner-images`, `avatars`) cannot be created via CLI in Replit (requires Docker). Must be created manually in Supabase Dashboard → Storage.
 
-## anon role access
-`anon` can only: SELECT `app_settings WHERE is_public = TRUE`, EXECUTE `get_product_availability()`. Everything else is denied. RLS policy "app_settings: anon read public" created in migration 025.
+## Super Admin Bootstrap
+See `docs/SUPER_ADMIN_BOOTSTRAP.md`. Must be done after all migrations; no automated way.
