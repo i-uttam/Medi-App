@@ -20,3 +20,8 @@ timeoutMs = 20000
 
 [nix]
 channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+EXPO_PUBLIC_ENABLE_TEMPORARY_EMAIL_AUTH = "true"

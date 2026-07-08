@@ -1,163 +1,110 @@
 # Temporary Email + Password Authentication
 
-## Status
-
-**TEMPORARY DEVELOPMENT AUTHENTICATION — DO NOT ENABLE FOR PRODUCTION RELEASE.**
-
-This feature adds a real Supabase Email + Password sign-in and sign-up path to the MediGo customer app. Its sole purpose is to allow development and testing without requiring SMS OTP on every session. It will be removed before the production release.
+> ⚠️ **DEVELOPMENT FEATURE — DO NOT ENABLE FOR PRODUCTION RELEASE.**
+>
+> This is a convenience login path for development and testing only.  
+> It is completely separate from the user-facing Phone OTP flow and will be removed before launch.
 
 ---
 
-## Feature Flag
+## Overview
 
-| Variable | `EXPO_PUBLIC_ENABLE_TEMPORARY_EMAIL_AUTH` |
-|---|---|
-| File | `artifacts/customer-app/constants/features.ts` |
-| Expected values | `true` / `false` |
-| Default (when absent) | `false` (disabled) |
+The temporary email auth feature adds a real Supabase Email + Password login option alongside the primary Phone OTP login. It uses `supabase.auth.signInWithPassword()` and `supabase.auth.signUp()` — no fake sessions, no auth bypass, no mock data. The resulting session is handled by the existing `AuthProvider` and is identical in every way to a Phone OTP session.
 
-The flag is a **UI/product availability flag only**. It is not a security boundary:
-- It does not weaken RLS.
-- It does not bypass Supabase Auth.
-- It does not bypass blocked-customer handling.
-- Removing the flag or setting it to `false` removes the UI entry point; no backend changes are needed.
+---
 
-### Enable for development
+## How to Enable
 
-In `artifacts/customer-app/.env.local`:
+Set the following environment variable to `true`:
 
 ```
 EXPO_PUBLIC_ENABLE_TEMPORARY_EMAIL_AUTH=true
 ```
 
-### Disable
+**In this Replit project:** set it in the Secrets panel (or as a plain env var if it is non-sensitive).
 
-Set it to `false` or remove the variable. The "Continue with Email" option disappears and the email-auth route redirects to Login automatically.
+Once set, restart the Expo workflow. The **"Continue with Email"** button will appear on the Login screen beneath the Phone OTP button.
 
 ---
 
-## Supabase Email Provider Requirement
+## How to Disable
 
-Email + Password authentication requires the **Email provider** to be enabled in the Supabase Dashboard:
+Set the variable to `false`, or remove it entirely:
 
-> **Authentication → Providers → Email → Enable Email provider**
+```
+EXPO_PUBLIC_ENABLE_TEMPORARY_EMAIL_AUTH=false
+```
 
-### Email confirmation behaviour
+When the value is anything other than the exact string `"true"`, the email option is hidden. The flag is read at bundle time — restart the Expo workflow after changing it.
 
-Supabase Email Auth may require email address confirmation before a session is issued. The app handles both cases:
+---
 
-| Supabase configuration | App behaviour |
+## Behaviour When Enabled
+
+| Feature | Behaviour |
 |---|---|
-| Confirm email: **disabled** | Sign Up returns a session immediately. AuthProvider handles navigation. |
-| Confirm email: **enabled** | Sign Up returns a user but no session. App shows: *"Check your email to confirm your account, then sign in."* Switches to Sign In mode. |
-
-**Do not disable email confirmation by manipulating `email_confirmed_at` or using `service_role`.** If immediate sign-in after sign-up is required during development, disable email confirmation intentionally in the Supabase Dashboard under **Authentication → Email → Confirm email**.
+| Login screen | Shows "Continue with Email" button below an OR divider |
+| Email Auth screen | Sign In tab and Create Account tab on one screen |
+| Sign In | `supabase.auth.signInWithPassword()` — real Supabase auth |
+| Sign Up | `supabase.auth.signUp()` — real Supabase auth; shows email confirmation notice if enabled |
+| Forgot Password | `supabase.auth.resetPasswordForEmail()` — sends a real reset link |
+| Show / Hide password | Toggle on every password field |
+| Session | Shared with Phone OTP — same `AuthProvider`, same protected routes, same logout |
+| Profile creation | Handled by the existing `handle_new_auth_user` trigger in migration 002; it captures `NEW.email` for email sign-ups |
+| Blocked account | Detected and redirected to `/(auth)/blocked` exactly as for Phone OTP users |
 
 ---
 
-## Implementation
+## How to Remove Later
 
-### Files specific to this feature
+1. Delete `artifacts/customer-app/app/(auth)/email-auth.tsx`
+2. Delete `artifacts/customer-app/features/auth/schemas/email.ts`
+3. Remove from `artifacts/customer-app/features/auth/api/auth.ts`:
+   - `signInWithEmailPassword()`
+   - `signUpWithEmailPassword()`
+   - `sendPasswordResetEmail()`
+   - Their result types (`EmailSignInResult`, `EmailSignUpResult`, `ForgotPasswordResult`)
+4. Remove the `ENABLE_TEMPORARY_EMAIL_AUTH` constant from `artifacts/customer-app/constants/features.ts`
+5. Remove the `ENABLE_TEMPORARY_EMAIL_AUTH` import and the `{ENABLE_TEMPORARY_EMAIL_AUTH && …}` block from `artifacts/customer-app/app/(auth)/login.tsx`
+6. Delete the `EXPO_PUBLIC_ENABLE_TEMPORARY_EMAIL_AUTH` secret / env var
+7. Delete this file
 
-| File | Purpose |
+No database migrations need to be reversed. The profile trigger handles both phone and email users in production regardless.
+
+---
+
+## Architecture Notes
+
+- **Feature flag only:** the flag is a UI gate, not a security boundary. RLS, Supabase Auth verification, and the blocked-customer check apply to all sessions regardless of how the user authenticated.
+- **No second auth state:** `email-auth.tsx` never calls `setUser`, `setSession`, or any AuthProvider setter. It delegates entirely to `onAuthStateChange` in `AuthProvider`.
+- **Password safety:** password values live only in React Hook Form state. They are cleared from form memory immediately after submission (success or error).
+
+---
+
+## Files Involved
+
+| File | Role |
 |---|---|
-| `artifacts/customer-app/constants/features.ts` | Feature flag definition |
-| `artifacts/customer-app/features/auth/schemas/email.ts` | Zod schemas (`emailSignInSchema`, `emailSignUpSchema`) |
-| `artifacts/customer-app/app/(auth)/email-auth.tsx` | Isolated email auth screen |
+| `artifacts/customer-app/app/(auth)/login.tsx` | Renders "Continue with Email" when flag is `true` |
+| `artifacts/customer-app/app/(auth)/email-auth.tsx` | Email auth screen (Sign In / Create Account / Forgot Password) |
+| `artifacts/customer-app/features/auth/api/auth.ts` | `signInWithEmailPassword`, `signUpWithEmailPassword`, `sendPasswordResetEmail` |
+| `artifacts/customer-app/features/auth/schemas/email.ts` | Zod validation schemas for email auth forms |
+| `artifacts/customer-app/constants/features.ts` | `ENABLE_TEMPORARY_EMAIL_AUTH` flag definition |
+| `supabase/migrations/002_profiles_and_admin.sql` | Profile trigger — already handles `NEW.email`; no change needed |
 
-### Files extended (shared with Phone OTP)
+---
 
-| File | Change |
+## Final Status
+
+| Area | Status |
 |---|---|
-| `artifacts/customer-app/features/auth/api/auth.ts` | Added `signInWithEmailPassword`, `signUpWithEmailPassword` |
-| `artifacts/customer-app/features/auth/utils/errors.ts` | Added email-specific error patterns |
-| `artifacts/customer-app/app/(auth)/login.tsx` | Added "OR / Continue with Email" section (flag-gated) |
-| `artifacts/customer-app/.env.example` | Added `EXPO_PUBLIC_ENABLE_TEMPORARY_EMAIL_AUTH=false` |
-
----
-
-## Auth Flow
-
-### Sign In
-
-1. User taps **Continue with Email** on Login screen (only visible when flag is `true`).
-2. App navigates to `/(auth)/email-auth`.
-3. User enters email + password.
-4. Zod validates locally (`emailSignInSchema`).
-5. `signInWithEmailPassword` calls `supabase.auth.signInWithPassword`.
-6. On success: Supabase fires `SIGNED_IN` → `AuthProvider.onAuthStateChange` → profile loading → route protection → `/(tabs)`.
-7. On failure: normalized error message displayed. No raw Supabase errors exposed.
-
-### Sign Up
-
-1. User switches to **Create Account** tab.
-2. Enters email, password, confirm password.
-3. Zod validates locally (`emailSignUpSchema`): email format, min 8-char password, passwords match.
-4. `signUpWithEmailPassword` calls `supabase.auth.signUp`.
-5. **Case A (session returned):** AuthProvider handles navigation automatically.
-6. **Case B (no session):** Email confirmation required. App shows confirmation notice, switches to Sign In.
-7. **Case C (error):** Normalized error shown.
-
-### Profile creation
-
-The `handle_new_auth_user` DB trigger fires on every `auth.users` INSERT, including email-only users. The trigger handles `NULL` phone correctly — the `profiles.phone` column is nullable and the trigger uses `NEW.phone` directly (NULL for email users). No migration required.
-
-### Shared architecture
-
-Email + Password sessions use **identical session infrastructure** to Phone OTP:
-- Same `AsyncStorage`-backed Supabase session persistence.
-- Same `autoRefreshToken` and `AppState` refresh architecture.
-- Same `AuthProvider` state machine and `onAuthStateChange` listener.
-- Same `useRouteProtection` hook — no special bypass for email users.
-- Same blocked-customer detection.
-- Same logout: `supabase.auth.signOut()` → `SIGNED_OUT` → cache clear → redirect to Login (Phone OTP screen, not email-auth).
-
----
-
-## Security boundaries
-
-- No hardcoded emails, passwords, UUIDs, or tokens.
-- Passwords exist only in React Hook Form component memory during the active interaction; cleared on success.
-- Passwords are never logged, stored in Zustand, passed through route params, or written to AsyncStorage.
-- `service_role` is not used.
-- `email_confirmed_at` is not manipulated.
-- RLS and blocked-customer handling are unchanged.
-
----
-
-## EMAIL AUTH DASHBOARD CONFIGURATION REQUIRED
-
-Before testing real Email + Password authentication:
-
-1. Open the Supabase Dashboard for the linked project.
-2. Go to **Authentication → Providers → Email**.
-3. Enable the Email provider.
-4. Choose whether to require email confirmation (see table above).
-5. Set `EXPO_PUBLIC_ENABLE_TEMPORARY_EMAIL_AUTH=true` in `.env.local`.
-
----
-
-## Removal checklist
-
-When this feature is removed before production release, follow these steps:
-
-1. [ ] Set `EXPO_PUBLIC_ENABLE_TEMPORARY_EMAIL_AUTH=false` and verify "Continue with Email" is hidden.
-2. [ ] Delete `artifacts/customer-app/app/(auth)/email-auth.tsx`.
-3. [ ] Delete `artifacts/customer-app/features/auth/schemas/email.ts`.
-4. [ ] Remove `signInWithEmailPassword` and `signUpWithEmailPassword` from `features/auth/api/auth.ts`.
-5. [ ] Remove the email-specific error patterns (clearly marked) from `features/auth/utils/errors.ts`.
-6. [ ] Remove the "Continue with Email" section (clearly marked) from `app/(auth)/login.tsx`.
-7. [ ] Remove the `ENABLE_TEMPORARY_EMAIL_AUTH` import from `login.tsx`.
-8. [ ] Remove `EXPO_PUBLIC_ENABLE_TEMPORARY_EMAIL_AUTH` from `constants/features.ts` (or the whole file if no other flags remain).
-9. [ ] Remove `EXPO_PUBLIC_ENABLE_TEMPORARY_EMAIL_AUTH` from `.env.example`.
-10. [ ] Delete this file (`docs/TEMPORARY_EMAIL_AUTH.md`) or archive it.
-
-**Do NOT remove:**
-- `AuthProvider`
-- Phone OTP flow (`login.tsx` phone section, `verify-otp.tsx`, `requestPhoneOtp`, `verifyPhoneOtp`)
-- Supabase session persistence architecture
-- Profile loading and retry logic
-- Blocked-customer handling
-- Protected route logic
-- Logout architecture
-- TanStack Query cache clearing
+| Phone OTP | ✅ Unchanged — primary production login |
+| Email Sign In | ✅ Real `supabase.auth.signInWithPassword()` |
+| Email Sign Up | ✅ Real `supabase.auth.signUp()` with email confirmation handling |
+| Forgot Password | ✅ Real `supabase.auth.resetPasswordForEmail()` |
+| Show / Hide Password | ✅ Built into `AppTextInput` |
+| Shared Session | ✅ Same `AuthProvider` / `onAuthStateChange` as Phone OTP |
+| Profile Loading | ✅ `handle_new_auth_user` trigger handles email sign-ups |
+| Protected Routes | ✅ Unchanged — `useRouteProtection` in `_layout.tsx` |
+| Logout | ✅ Unchanged — `signOut()` in `AuthProvider` |
+| Feature Flag Gate | ✅ `EXPO_PUBLIC_ENABLE_TEMPORARY_EMAIL_AUTH=true` to enable |

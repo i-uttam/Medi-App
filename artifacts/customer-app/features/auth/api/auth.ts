@@ -246,3 +246,28 @@ export async function signUpWithEmailPassword(
     return { error: mapUnknownError(err), requiresEmailConfirmation: false };
   }
 }
+
+// ── Forgot Password ────────────────────────────────────────────────────────────
+
+export interface ForgotPasswordResult {
+  error: string | null;
+}
+
+/**
+ * Send a password-reset email via Supabase Auth.
+ *
+ * Supabase always returns a 200 for this endpoint regardless of whether the
+ * address is registered (prevents email enumeration). The caller should always
+ * show "check your inbox" regardless of outcome.
+ *
+ * @param email - Validated, trimmed, lowercased email address.
+ */
+export async function sendPasswordResetEmail(email: string): Promise<ForgotPasswordResult> {
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    if (error) return { error: mapAuthError(error).message };
+    return { error: null };
+  } catch (err) {
+    return { error: mapUnknownError(err) };
+  }
+}
